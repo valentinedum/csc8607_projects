@@ -6,3 +6,7 @@ tensorboard
 pyyaml
 tqdm
 numpy
+datasets
+plotly
+matplotlib
+kaleido

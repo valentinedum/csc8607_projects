@@ -10,10 +10,10 @@
 
 ## 0) Informations générales
 
-- **Étudiant·e** : _Nom, Prénom_
-- **Projet** : _Intitulé (dataset × modèle)_
-- **Dépôt Git** : _URL publique_
-- **Environnement** : `python == ...`, `torch == ...`, `cuda == ...`  
+- **Étudiant·e** : _DUMANGE, Valentine_
+- **Projet** : _CUB-200-2011 (oiseaux, 200 espèces) avec convolutions groupées (grouped convolutions) (CUB-200-2011 × CNN 2D à 3 stages)_
+- **Dépôt Git** : _[URL publique](https://github.com/valentinedum/csc8607_projects)_
+- **Environnement** : `python == 3.10.18`, `torch == 2.5.1`, `cuda == 12.1`  
 - **Commandes utilisées** :
   - Entraînement : `python -m src.train --config configs/config.yaml`
   - LR finder : `python -m src.lr_finder --config configs/config.yaml`
@@ -25,27 +25,40 @@
 ## 1) Données
 
 ### 1.1 Description du dataset
-- **Source** (lien) :
-- **Type d’entrée** (image / texte / audio / séries) :
-- **Tâche** (multiclasses, multi-label, régression) :
-- **Dimensions d’entrée attendues** (`meta["input_shape"]`) :
-- **Nombre de classes** (`meta["num_classes"]`) :
+- **Source** (lien) : https://huggingface.co/datasets/dpdl-benchmark/caltech_birds2011
+- **Type d’entrée** (image / texte / audio / séries) : images et textes
+- **Tâche** (multiclasses, multi-label, régression) : classification multiclasses
+- **Dimensions d’entrée attendues** (`meta["input_shape"]`) : images de tailles variées, après normalisation -> 224×224
+- **Nombre de classes** (`meta["num_classes"]`) :  200 classes d’oiseaux
 
 **D1.** Quel dataset utilisez-vous ? D’où provient-il et quel est son format (dimensions, type d’entrée) ?
+
+Nous allons utiliser le dataset de huggingface nommé caltech_birds2011 (url ci-dessus). C'est un dataset avec des images d'oiseaux ainsi que leur espece (texte). Les images sont de tailles variables.
 
 ### 1.2 Splits et statistiques
 
 | Split | #Exemples | Particularités (déséquilibre, longueur moyenne, etc.) |
-|------:|----------:|--------------------------------------------------------|
-| Train |           |                                                        |
-| Val   |           |                                                        |
-| Test  |           |                                                        |
+| ----: | --------: | ----------------------------------------------------- |
+| Train |      4795 |         équilibré, pas de labels manquants,     images de tailles variées                                      |
+|   Val |      1199 |           équilibré, pas de labels manquants, iamges de tailles variées                                           |
+|  Test |      5794 |               déséquilibré,    pas de labels manquants , images de tailles variées                                   |
 
 **D2.** Donnez la taille de chaque split et le nombre de classes.  
+Il y a 200 classes dans chaque split et le train fait 4795 lignes, le validation 1199, le test 5794.
+
 **D3.** Si vous avez créé un split (ex. validation), expliquez **comment** (stratification, ratio, seed).
+Dans mon dataset, j'avais initialement aucun set de validation. J'ai donc créé mon propre split à partir du train en appliquant une stratification par classe avec un ratio de 80% train / 20% val.
+La seed a été fixée à 42 pour permettre la reproductibilité.
 
 **D4.** Donnez la **distribution des classes** (graphique ou tableau) et commentez en 2–3 lignes l’impact potentiel sur l’entraînement.  
+La distribution des classes montrent que les ensembles Train et Val sont très équilibrés, il ya autant d'échantillons (24) dans chaque classe. A l'inverse le dataset Test est moins équilibré. La plupart des classes ont 30 échantillons mais certains en ont moins avec 12 éachntillons, ou une vingtaine.
+Des graphiques ont été ploté via tensorboard (voir le dossier runs).
+![distribution_train](./runs/data_analysis/distribution_train.png)
+![distribution_test](./runs/data_analysis/distribution_test.png)
+![distribution_val](./runs/data_analysis/distribution_val.png)
+
 **D5.** Mentionnez toute particularité détectée (tailles variées, longueurs variables, multi-labels, etc.).
+Ce dataset a très peu de particularités. Il n'a aucun label manquant. Ces images sont toutes en RGB mais sont par contres de tailles très différentes, on compte au moins 750 différentes tailles d'images.
 
 ### 1.3 Prétraitements (preprocessing) — _appliqués à train/val/test_
 
@@ -158,10 +171,10 @@ Expliquez le rôle des **2 hyperparamètres spécifiques au modèle** (ceux impo
 
 - **Durée des runs** : `_____` époques par run (1–5 selon dataset), même seed
 
-| Run (nom explicite) | LR    | WD     | Hyp-A | Hyp-B | Val metric (nom=_____) | Val loss | Notes |
-|---------------------|-------|--------|-------|-------|-------------------------|----------|-------|
-|                     |       |        |       |       |                         |          |       |
-|                     |       |        |       |       |                         |          |       |
+| Run (nom explicite) | LR  | WD  | Hyp-A | Hyp-B | Val metric (nom=_____) | Val loss | Notes |
+| ------------------- | --- | --- | ----- | ----- | ---------------------- | -------- | ----- |
+|                     |     |     |       |       |                        |          |       |
+|                     |     |     |       |       |                        |          |       |
 
 > _Insérer capture TensorBoard (onglet HParams/Scalars) ou tableau récapitulatif._
 

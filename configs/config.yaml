@@ -1,18 +1,18 @@
 # Fichier de configuration générique (à adapter au projet)
 dataset:
-  name: TODO                # ex: "CIFAR10", "IMDB", ...
+  name: CUB-200-2011        # ex: "CIFAR10", "IMDB", ...
   root: "./data"            # chemin local pour les données
   split:                    # optionnel : noms/tailles de splits
-    train: TODO
-    val: TODO
-    test: TODO
+    train: "train"
+    val: "val"
+    test: "test"
   download: true            # si supporté
   num_workers: 4
   shuffle: true
 
 preprocess:
   # transformations de base (ex: resize, normalize)
-  resize:                   # ex: [32, 32] ou null
+  resize: [224, 224]                  # ex: [32, 32] ou null
   normalize:                # ex: {"mean": [0.5,0.5,0.5], "std":[0.5,0.5,0.5]} ou null
   text_tokenizer:           # pour NLP : nom ou paramètres, sinon null
 
@@ -25,8 +25,8 @@ augment:
 
 model:
   type: TODO                # ex: "resnet18", "mlp", "lstm", ...
-  num_classes: TODO
-  input_shape:              # ex: [3, 32, 32] ou null
+  num_classes: 200
+  input_shape: [3, 224, 224] # ex: [3, 32, 32] ou null
   hidden_sizes:             # ex: [256, 128] ou null
   activation: relu          # ex: relu, gelu, tanh...
   dropout: 0.0              # ex: 0.0–0.5

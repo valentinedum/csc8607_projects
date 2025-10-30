@@ -8,10 +8,70 @@ Le dictionnaire meta doit contenir au minimum :
 - "num_classes": int
 - "input_shape": tuple (ex: (3, 32, 32) pour des images)
 """
+import torch
+from torch.utils.data import DataLoader
+from pandas import read_parquet
+import os
+from datasets import load_dataset, ClassLabel
 
 def get_dataloaders(config: dict):
     """
     Crée et retourne les DataLoaders d'entraînement/validation/test et des métadonnées.
     À implémenter.
     """
-    raise NotImplementedError("get_dataloaders doit être implémentée par l'étudiant·e.")
+    root_path = os.path.expanduser(config['dataset']['root'])
+    
+    data_files = {
+        "train": os.path.join(root_path, config['dataset']['split']['train'], "*.parquet"),
+        "test": os.path.join(root_path, config['dataset']['split']['test'], "*.parquet")
+    }
+
+    dataset = load_dataset('parquet', data_files=data_files)
+    columns_to_keep = ['image', 'label']
+    dataset = dataset.remove_columns([col for col in dataset['train'].column_names if col not in columns_to_keep])
+    
+    # Convertir la colonne label en ClassLabel pour stratifier correctement
+    num_classes = config['model']['num_classes']
+    class_label_feature = ClassLabel(num_classes=num_classes, names=[str(i) for i in range(num_classes)])
+    dataset = dataset.cast_column('label', class_label_feature)
+
+    trainset = dataset['train']
+    testset = dataset['test']
+
+    
+    # Création du val set à partir du train set
+    split = trainset.train_test_split(
+        test_size=0.2,
+        stratify_by_column="label", 
+        seed=config["train"]["seed"]
+    )
+
+    trainset = split['train']
+    valset = split['test']
+
+    meta = {
+        "num_classes": config['model']['num_classes'],
+        "input_shape": config['model']['input_shape']
+    }
+
+    train_loader = DataLoader(trainset, batch_size=config['train']['batch_size'], shuffle=True)
+    val_loader = DataLoader(valset, batch_size=config['train']['batch_size'], shuffle=False)
+    test_loader = DataLoader(testset, batch_size=config['train']['batch_size'], shuffle=False)
+
+
+    return train_loader, val_loader, test_loader, meta
+    # raise NotImplementedError("get_dataloaders doit être implémentée par l'étudiant·e.")
+
+
+# ## Test rapide
+# if __name__ == "__main__":
+
+#     import yaml
+#     with open("./configs/config.yaml", "r") as f:
+#         config = yaml.safe_load(f)
+#     train_loader, val_loader, test_loader, meta = get_dataloaders(config)
+
+#     print(f"Train loader: {len(train_loader)} batches")
+#     print(f"Val loader: {len(val_loader)} batches")
+#     print(f"Test loader: {len(test_loader)} batches")
+#     print(f"Meta: {meta}")
