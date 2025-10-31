@@ -3,11 +3,16 @@ Data analysis (Train, Val, Test)
 """
 
 import yaml
+import torch
 import src.data_loading as data_loading
+from src.preporcessing import get_preprocess_transforms
+from src.augmentation import get_augmentation_transforms
 import numpy as np
 import matplotlib.pyplot as plt
 from torch.utils.tensorboard import SummaryWriter
 from collections import Counter
+from torchvision import transforms as T
+from random import sample as randomsample
 
 def get_sorted_counts(dataset, num_classes):
     """
@@ -40,6 +45,21 @@ def missing_values(dataset, feature):
     """
     return sum(1 for example in dataset if example[feature] is None)
 
+def compute_statistics(dataset, config):
+    """
+    Calcule des statistiques basiques (moyenne, écart-type) pour les features numériques.
+    """
+    transform = T.Compose([
+        T.Resize((config['model']['input_shape'][1], config['model']['input_shape'][2])),
+        T.ToTensor()
+    ])
+    tensor_images = [transform(example['image']) for example in dataset]
+    tensor_images = torch.stack(tensor_images)
+    mean = tensor_images.mean(dim=(0, 2, 3))
+    std = tensor_images.std(dim=(0, 2, 3))
+    return mean, std
+
+    
 def image_analysis(dataset):
     """
     Analyse les différentes tailles et modes des images dans le dataset.
@@ -98,13 +118,33 @@ def analyze_data():
     #     missing_test = missing_values(test.dataset, feature)
     #     print(f" - Feature '{feature}': Train={missing_train}, Val={missing_val}, Test={missing_test}")
 
-    print("\nAnalyse des images :")
-    train_tailles, train_modes = image_analysis(train.dataset)
-    val_tailles, val_modes = image_analysis(val.dataset)
-    test_tailles, test_modes = image_analysis(test.dataset)
-    print(f"Nombre de tailles d'images différentes - Train: {len(train_tailles)}, Val: {len(val_tailles)}, Test: {len(test_tailles)}")
-    print(f"Modes d'images - Train: {train_modes}, Val: {val_modes}, Test: {test_modes}")
+    # print("\nAnalyse des images :")
+    # train_tailles, train_modes = image_analysis(train.dataset)
+    # val_tailles, val_modes = image_analysis(val.dataset)
+    # test_tailles, test_modes = image_analysis(test.dataset)
+    # print(f"Nombre de tailles d'images différentes - Train: {len(train_tailles)}, Val: {len(val_tailles)}, Test: {len(test_tailles)}")
+    # print(f"Modes d'images - Train: {train_modes}, Val: {val_modes}, Test: {test_modes}")
     
+    # # Calcul des statistiques d'images
+    # train_mean, train_std = compute_statistics(train.dataset, config)
+    # print(f"\nStatistiques des images (Train Set) - Mean: {train_mean.numpy()}, Std: {train_std.numpy()}")
+    # writer = SummaryWriter("runs/data_augmentation")
+    images = randomsample(list(train.dataset['image']), 5)
+    # for idx, img in enumerate(images):
+    #     writer.add_image(f"Sample Image {idx}", T.ToTensor()(img), 0)
+
+    augment = get_augmentation_transforms(config)
+    images = [augment(img) for img in images]
+    # for idx, image in enumerate(images):
+    #     writer.add_image(f"Augmented Image {idx}", T.ToTensor()(image), 0)
+    transform = get_preprocess_transforms(config)
+    images = [transform(img) for img in images]
+    # for idx, image in enumerate(images):
+    #     writer.add_image(f"Preprocessed & Augmented Image {idx}", image, 0)
+    # writer.close()
+
+    print("Nouvelle image après augmentation:", )
+
     print("\n✅ Analyse terminée. Graphiques loggés dans TensorBoard (onglet 'Images').")
 
 analyze_data()

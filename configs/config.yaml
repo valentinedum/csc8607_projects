@@ -13,15 +13,22 @@ dataset:
 preprocess:
   # transformations de base (ex: resize, normalize)
   resize: [224, 224]                  # ex: [32, 32] ou null
-  normalize:                # ex: {"mean": [0.5,0.5,0.5], "std":[0.5,0.5,0.5]} ou null
-  text_tokenizer:           # pour NLP : nom ou paramètres, sinon null
+  normalize: 
+    mean: [0.48185426, 0.50031734, 0.42832923]
+    std: [0.2270571, 0.2226704, 0.26213554]           # ex: {"mean": [0.5,0.5,0.5], "std":[0.5,0.5,0.5]} ou null
+  text_tokenizer:   null        # pour NLP : nom ou paramètres, sinon null
 
 augment:
   # data augmentation (laisser null si non utilisée)
-  random_flip:              # true/false
-  random_crop:              # paramètres ou null
+  random_flip: true             # true/false
+  random_crop: null           # paramètres ou null
+  random_rotation: true
   color_jitter:             # paramètres ou null
-  spec_augment:             # pour audio : paramètres ou null
+    brightness: 0.2
+    contrast: 0.2
+    saturation: 0.2
+    hue: 0.1          
+  spec_augment: null            # pour audio : paramètres ou null
 
 model:
   type: TODO                # ex: "resnet18", "mlp", "lstm", ...

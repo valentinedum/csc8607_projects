@@ -53,9 +53,9 @@ La seed a été fixée à 42 pour permettre la reproductibilité.
 **D4.** Donnez la **distribution des classes** (graphique ou tableau) et commentez en 2–3 lignes l’impact potentiel sur l’entraînement.  
 La distribution des classes montrent que les ensembles Train et Val sont très équilibrés, il ya autant d'échantillons (24) dans chaque classe. A l'inverse le dataset Test est moins équilibré. La plupart des classes ont 30 échantillons mais certains en ont moins avec 12 éachntillons, ou une vingtaine.
 Des graphiques ont été ploté via tensorboard (voir le dossier runs).
-![distribution_train](./runs/data_analysis/distribution_train.png)
-![distribution_test](./runs/data_analysis/distribution_test.png)
-![distribution_val](./runs/data_analysis/distribution_val.png)
+![distribution_train](./artifacts/distribution_train.png)
+![distribution_test](./artifacts/distribution_test.png)
+![distribution_val](./artifacts/distribution_val.png)
 
 **D5.** Mentionnez toute particularité détectée (tailles variées, longueurs variables, multi-labels, etc.).
 Ce dataset a très peu de particularités. Il n'a aucun label manquant. Ces images sont toutes en RGB mais sont par contres de tailles très différentes, on compte au moins 750 différentes tailles d'images.
@@ -64,13 +64,16 @@ Ce dataset a très peu de particularités. Il n'a aucun label manquant. Ces imag
 
 Listez précisément les opérations et paramètres (valeurs **fixes**) :
 
-- Vision : resize = __, center-crop = __, normalize = (mean=__, std=__)…
+- Vision : resize = [224, 224], center-crop = None, normalize = (mean=[0.48185426, 0.50031734, 0.42832923], std=[0.2270571, 0.2226704, 0.26213554])…
 - Audio : resample = __ Hz, mel-spectrogram (n_mels=__, n_fft=__, hop_length=__), AmplitudeToDB…
 - NLP : tokenizer = __, vocab = __, max_length = __, padding/truncation = __…
 - Séries : normalisation par canal, fenêtrage = __…
 
-**D6.** Quels **prétraitements** avez-vous appliqués (opérations + **paramètres exacts**) et **pourquoi** ?  
-**D7.** Les prétraitements diffèrent-ils entre train/val/test (ils ne devraient pas, sauf recadrage non aléatoire en val/test) ?
+**D6.** Quels **prétraitements** avez-vous appliqués (opérations + **paramètres exacts**) et **pourquoi** ? 
+Comme indiqué en D5 , les images du dataset ont des tailles très variés. Seulement es réseaux de neurones convolutifs ont besoin d'une entrée à taille fixe. Nous redimensionnons donc les images à [224, 224]. Après le resizing, il est important de transformer l'image en tenseur pour pouvoir la traiter avec pytorch. Puis nous normalisons notre tenseur avec mean=[0.48185426, 0.50031734, 0.42832923] et std=[0.2270571, 0.2226704, 0.26213554] car après analyse ce sont les statistiques que nous avons à propos du dataset d'entrainement. Autrement nous aurions pu trouver sur internet les paramètres moyens des datasets d'images connues tels que ImageNet et approximer par ceux-ci.
+NB: Je n'ai pas fait de center-crop car un redimensionnement de l'image avait déjà été fait. On ne voudrait pas qu'une partie de l'oiseau soit accidentellement coupée.
+
+**D7.** Les prétraitements diffèrent-ils entre train/val/test (ils ne devraient pas, sauf recadrage non aléatoire en val/test) ? Tous mes prétraitements sont les mêmes pour train, val et test pour être sur que l'évaluation sera représentative. Toutefois train recevra en plus de stransformations d'augmentation de données.
 
 ### 1.4 Augmentation de données — _train uniquement_
 
@@ -80,7 +83,12 @@ Listez précisément les opérations et paramètres (valeurs **fixes**) :
   - Séries : jitter amplitude=__, scaling=__ …
 
 **D8.** Quelles **augmentations** avez-vous appliquées (paramètres précis) et **pourquoi** ?  
+Nous avons appliqué à notre dataset plusieurs augmentations car nous avons un grand risque de surapprentissage avec très peu d'images par classe (24 environ). Pour que le modèle devienne plus robuste, nous appliquons un randomHorizontalFlip de probabilité 0.5 car un oiseau est le même qu'il soit tourné vers la droite ou la gauche. Nous allons ainsi rendre le modèle invariant à cela.
+Nous allons aussi prendre en compte le fait que les photos ont pu être prises sous différentes conditions d'éclairage. Les paramètres Variations aléatoires de luminosité (±20%), contraste (±20%), saturation (±20%) et teinte (±10%) ont été choisi d'apès la documentation de pytorch.
+Enfin nous allons aussi appliquer des petites rotations (+-15 degrés) car les oiseaux peuvent être plus ou moins inclinés. On rendra ainsi le modèle robuste aux changements d'orientation.
+
 **D9.** Les augmentations **conservent-elles les labels** ? Justifiez pour chaque transformation retenue.
+Oui, les transformations conservent les labels, c'est bien le plus important. Le modèle doit comprendre qui oiseau qu'il ait la tête à droite ou à gauche, qu'il ait été pris plus ou moins au soleil et plus ou moins incliné est le même. Il garde la même espèce.
 
 ### 1.5 Sanity-checks
 
