@@ -109,6 +109,8 @@ Avec cet exemple, nous remarquons en effet que l'image avait une chance sur deux
 
 Puis le preprocessing a normalisé les couleurs de l'image d'où le changement marquant et surtout on a redimensionné l'image afin qu'elle soit en format carré de 224 par 224. Le preprocessing a lui aussi bien fonctionné.
 
+D'autres images sont disponibles dans le dossier : `artifacts`
+
 **D11.** Donnez la **forme exacte** d’un batch train (ex. `(batch, C, H, W)` ou `(batch, seq_len)`), et vérifiez la cohérence avec `meta["input_shape"]`.
 D'après la sortie de mon script de test dans data_loading, la forme exact de sortie d'un batch est (64, 3, 224, 224). Ce qui est cohérent avec le "batch_size" et "input_shape" inscrit dans les configs.
 
