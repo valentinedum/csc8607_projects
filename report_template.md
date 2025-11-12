@@ -119,9 +119,9 @@ D'après la sortie de mon script de test dans data_loading, la forme exact de so
 ### 2.1 Baselines
 
 **M0.**
-- **Classe majoritaire** — Métrique : `_____` → score = `_____`
-- **Prédiction aléatoire uniforme** — Métrique : `_____` → score = `_____`  
-_Commentez en 2 lignes ce que ces chiffres impliquent._
+- **Classe majoritaire** — Métrique : `Accuracy` → score = `0.52%`
+- **Prédiction aléatoire uniforme** — Métrique : `Accuracy` → score = `0.41%`  
+_Ces scores très faibles (proches de 1/200 = 0.5%) confirment que le dataset est équilibré et ne présentent pas de biais. Notre modèle devra faire mieux que ces scores en apprenant des caractéristiques discriminantes_
 
 ### 2.2 Architecture implémentée
 
