@@ -34,10 +34,10 @@ model:
   type: TODO                # ex: "resnet18", "mlp", "lstm", ...
   num_classes: 200
   input_shape: [3, 224, 224] # ex: [3, 32, 32] ou null
-  hidden_sizes:             # ex: [256, 128] ou null
+  hidden_sizes: [64, 128, 256]            # ex: [256, 128] ou null
   activation: relu          # ex: relu, gelu, tanh...
   dropout: 0.0              # ex: 0.0–0.5
-  batch_norm: false         # true/false
+  batch_norm: true         # true/false
   residual: false           # true/false
   attention: false          # true/false
   rnn:                      # pour RNN/LSTM/GRU : paramètres ou null

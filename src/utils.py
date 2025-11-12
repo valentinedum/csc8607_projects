@@ -7,10 +7,18 @@ Fonctions attendues (signatures imposées) :
 - count_parameters(model) -> int
 - save_config_snapshot(config: dict, out_dir: str) -> None
 """
+import random
+import numpy as np
+import torch
 
 def set_seed(seed: int) -> None:
     """Initialise les seeds (numpy/torch/python). À implémenter."""
-    raise NotImplementedError("set_seed doit être implémentée par l'étudiant·e.")
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    # raise NotImplementedError("set_seed doit être implémentée par l'étudiant·e.")
 
 
 def get_device(prefer: str | None = "auto") -> str:
