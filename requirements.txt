@@ -1,4 +1,6 @@
 torch
+pytorch
+pytorch-cuda=12.1
 torchvision
 torchmetrics
 torchaudio

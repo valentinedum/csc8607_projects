@@ -13,13 +13,11 @@ from datasets import load_dataset, ClassLabel, Image
 from torchmetrics.classification import MulticlassAccuracy, MulticlassF1Score
 
 # --- IMPORTS ---
-try:
-    from src.preporcessing import get_preprocess_transforms
-    from src.augmentation import get_augmentation_transforms
-except ImportError:
-    # Fallback si lancé depuis la racine sans 'src.'
-    from preporcessing import get_preprocess_transforms
-    from augmentation import get_augmentation_transforms
+
+from preporcessing import get_preprocess_transforms
+from augmentation import get_augmentation_transforms
+from model import build_model
+from utils import count_parameters
 
 def get_sorted_counts(dataset, num_classes):
     """
@@ -232,9 +230,13 @@ def analyze_data():
     # writer.close()
     # print("\nAnalyse terminée. Lancez TensorBoard : tensorboard --logdir runs/data_analysis")
 
-    # 7. CALCUL DES BASELINES
-    print("\nCalcul des baselines...")
-    calculate_baselines(train, test, num_classes, config)
+    # # 7. CALCUL DES BASELINES
+    # print("\nCalcul des baselines...")
+    # calculate_baselines(train, test, num_classes, config)
+
+    # 8. PARAMETRES ENTRAINABLES
+    countable_parameters = count_parameters(build_model(config))
+    print(f"Nombre de paramètres entraînables : {countable_parameters}")
 
 if __name__ == "__main__":
     analyze_data()

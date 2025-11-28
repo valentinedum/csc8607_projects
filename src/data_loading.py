@@ -65,18 +65,18 @@ def get_dataloaders(config: dict):
 
     val_test_pipeline = preprocess_transforms
     
-    trainset.set_transform(lambda batch: {
-        'image': [train_pipeline(img) for img in batch['image']],
-        'label': batch['label']
-    })
-    valset.set_transform(lambda batch: {
-        'image': [val_test_pipeline(img) for img in batch['image']],
-        'label': batch['label']
-    })
-    testset.set_transform(lambda batch: {
-        'image': [val_test_pipeline(img) for img in batch['image']],
-        'label': batch['label']
-    })
+    def transform_train(batch):
+        batch['image'] = [train_pipeline(img) for img in batch['image']]
+        return batch
+
+    def transform_val(batch):
+        batch['image'] = [val_test_pipeline(img) for img in batch['image']]
+        return batch
+
+    # set_transform est "in-place" mais affecte la lecture à la volée
+    trainset.set_transform(transform_train)
+    valset.set_transform(transform_val)
+    testset.set_transform(transform_val)
 
     meta = {
         "num_classes": config['model']['num_classes'],

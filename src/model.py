@@ -60,7 +60,7 @@ def build_model(config: dict):
     layers.append(nn.AdaptiveAvgPool2d((1, 1)))
 
     layers.append(nn.Flatten())
-    layers.append(nn.Linear(config['train']['batch_size'], num_classes))
+    layers.append(nn.Linear(hidden_sizes[2], num_classes))
 
     return nn.Sequential(*layers)
 

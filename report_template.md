@@ -128,46 +128,61 @@ _Ces scores très faibles (proches de 1/200 = 0.5%) confirment que le dataset es
 ### 2.2 Architecture implémentée
 
 - **Description couche par couche** (ordre exact, tailles, activations, normalisations, poolings, résiduels, etc.) :
-  - Input → …
-  - Stage 1 (répéter N₁ fois) : …
-  - Stage 2 (répéter N₂ fois) : …
-  - Stage 3 (répéter N₃ fois) : …
-  - Tête (GAP / linéaire) → logits (dimension = nb classes)
+  - Input → 3×224×224
+  - Initialization : Conv 3×3 (64 canaux, padding 1) → BatchNorm → ReLU.
+  - Stage 1 (répéter 2 fois) :
+    - Conv 3×3 (64 → 64, padding 1) → BatchNorm → ReLU.
+    - Conv 3×3 (64 → 64, padding 1, groups = G) → BatchNorm → ReLU.
+  - MaxPool 2×2
+  - Stage 2 (répéter 2 fois) :
+    - Conv 3×3 (64 → 128, padding 1) → BatchNorm → ReLU.
+    - Conv 3×3 (128 → 128, padding 1, groups = G) → BatchNorm → ReLU.
+  - MaxPool 2×2
+  - Stage 3 (répéter 2 fois) :
+    - Conv 3×3 (128 → 256, padding 1) → BatchNorm → ReLU.
+    - Conv 3×3 (256 → 256, padding 1, groups = G) → BatchNorm → ReLU.
+  - Global Average Pooling
+  - Tête linéaire (256 → 200) → logits (dimension = nb classes)
+
+Remarque : pour que groups=G soit valide, le nombre de canaux de la convolution doit être divisible par G.
 
 - **Loss function** :
   - Multi-classe : CrossEntropyLoss
   - Multi-label : BCEWithLogitsLoss
   - (autre, si votre tâche l’impose)
 
-- **Sortie du modèle** : forme = __(batch_size, num_classes)__ (ou __(batch_size, num_attributes)__)
+- **Sortie du modèle** : forme = __(64, 200)__
 
-- **Nombre total de paramètres** : `_____`
+- **Nombre total de paramètres** : `1974088`
 
 **M1.** Décrivez l’**architecture** complète et donnez le **nombre total de paramètres**.  
 Expliquez le rôle des **2 hyperparamètres spécifiques au modèle** (ceux imposés par votre sujet).
-
+L'architecture est un réseau de neurones convolutif (CNN) divisé en trois étages principaux, où chaque étage est constitué d'une suite de blocs répétant des opérations de convolution, de normalisation (BatchNorm) et d'activation non-linéaire (ReLU). La taille des images diminue progressivement grâce à des couches de MaxPool, jusqu'à une agrégation finale par moyenne (Average Pooling) avant la classification.
+Ce réseau totalise 1 964 088 paramètres entraînables. Concernant les hyperparamètres imposés, l'utilisation de convolutions groupées (G=2) permet de diviser les connexions entre canaux pour réduire le coût de calcul et éviter le surapprentissage, tandis que le nombre de blocs par stage (N=2) joue sur la profondeur du réseau pour permettre l'apprentissage de motifs plus ou moins complexes.
 
 ### 2.3 Perte initiale & premier batch
 
-- **Loss initiale attendue** (multi-classe) ≈ `-log(1/num_classes)` ; exemple 100 classes → ~4.61
-- **Observée sur un batch** : `_____`
+- **Loss initiale attendue** (multi-classe) ≈ `-log(1/num_classes) = 5.2983`
+- **Observée sur un batch** : `5.3390`
 - **Vérification** : backward OK, gradients ≠ 0
 
 **M2.** Donnez la **loss initiale** observée et dites si elle est cohérente. Indiquez la forme du batch et la forme de sortie du modèle.
-
+La loss initiale est de 5.3390, ce qui est cohérent avec la loss théorique (tirée de la loi uniforme) = 5.2983.
+Le batch d'entrée est de taille (64, 3, 224, 224), ce qui confirme que le modèle traite bien un batch de 64 images RVB de taille 224x224. La sortie du modèle (64, 200) correspond bien à un loggit avec 200 classes.
 ---
 
 ## 3) Overfit « petit échantillon »
 
-- **Sous-ensemble train** : `N = ____` exemples
-- **Hyperparamètres modèle utilisés** (les 2 à régler) : `_____`, `_____`
-- **Optimisation** : LR = `_____`, weight decay = `_____` (0 ou très faible recommandé)
-- **Nombre d’époques** : `_____`
+- **Sous-ensemble train** : `N = 16` exemples
+- **Hyperparamètres modèle utilisés** (les 2 à régler) : `Nombre de groupes G = 2`, `Nombre de blocs par stage = 2`
+- **Optimisation** : LR = `0.001`, weight decay = `0.0` (0 ou très faible recommandé)
+- **Nombre d’époques** : `50`
 
-> _Insérer capture TensorBoard : `train/loss` montrant la descente vers ~0._
+>![train/loss](./artifacts/Train_Loss.svg)
 
 **M3.** Donnez la **taille du sous-ensemble**, les **hyperparamètres** du modèle utilisés, et la **courbe train/loss** (capture). Expliquez ce qui prouve l’overfit.
-
+Nous avons pris un sous ensemble de 16 images avec les hyperparamètres Nombre de groupes = 2 et nombre de bloc par stage = 2. 
+Avec la courbe de train/loss du dessus, on comprend qu'au bout d'à peine 20 epochs, le modèle ne fait quasi plus d'erreur (loss~=0). Le modèle connait "par coeur" le sous ensemble, il fait preuve d'overfit.
 ---
 
 ## 4) LR finder
