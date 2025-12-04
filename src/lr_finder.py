@@ -17,6 +17,7 @@ import yaml
 from tqdm import tqdm
 import torch
 import numpy as np
+import os
 from torch.utils.tensorboard import SummaryWriter
 
 def main():
@@ -37,62 +38,77 @@ def main():
 
     start = 1e-7
     end = 1e-1
-    num_steps = 50
+    num_steps = 20
     weight_decay = config['train']['optimizer']['weight_decay']
     learning_rates = np.logspace(math.log10(start), math.log10(end), num=num_steps)
 
-    train_loader, val_loader, test_loader, meta = get_dataloaders(config)
+    train_loader, _, _, _ = get_dataloaders(config)
     model = build_model(config).to(device)
     criterion = torch.nn.CrossEntropyLoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=start, weight_decay=weight_decay)
     
+    runs_dir = config['paths']['runs_dir']
+    os.makedirs(runs_dir, exist_ok=True)
     writer = SummaryWriter(log_dir="runs/lr_finder")
     
-    losses = []
     best_loss = float('inf')
-    best_lr = start
+    avg_loss = 0.0
+    losses_log = []
+    lrs_log = []
 
+    iter_loader = iter(train_loader)
+    
+    print(f"--- Démarrage LR Finder ({num_steps} itérations) ---")
     pbar = tqdm(enumerate(learning_rates), total=len(learning_rates), desc="LR Finder")
 
     for step, lr in pbar:
-        optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
-        model.train()
-        total_loss = 0.0
-        for batch_idx, batch in enumerate(train_loader):
-            if batch_idx > 10:
-                break 
-            images = batch['image'].to(device)
-            labels = batch['label'].to(device)
-
-            optimizer.zero_grad()
-            outputs = model(images)
-            loss = criterion(outputs, labels)
-            loss.backward()
-            optimizer.step()
-
-            total_loss += loss.item()
+        for param_group in optimizer.param_groups:
+            param_group['lr'] = lr
         
-        avg_loss = total_loss / len(train_loader)
-        losses.append(avg_loss)
+        try :
+            batch = next(iter_loader)
+        except StopIteration:
+            iter_loader = iter(train_loader)
+            batch = next(iter_loader)
+          
+        images = batch['image'].to(device)
+        labels = batch['label'].to(device)
 
-        if avg_loss > 4 * best_loss:
-            print("Stopping early, loss has diverged")
+        optimizer.zero_grad()
+        outputs = model(images)
+        loss = criterion(outputs, labels)
+
+        if not torch.isfinite(loss):
+            print("Stopping early, loss is non-finite")
             break
-        
+
+        loss.backward()
+        optimizer.step()
+
+        current_loss = loss.item()
+        if step == 0:
+            avg_loss = current_loss
+        else:
+            avg_loss = 0.9 * avg_loss + 0.1 * current_loss
+
         if avg_loss < best_loss:
             best_loss = avg_loss
+        
+        losses_log.append(loss.item())
+        lrs_log.append(lr)
+        
+        if avg_loss > 4 * best_loss and step > 10:
+            print("Stopping early, loss has diverged")
+            break
+
 
         writer.add_scalar("lr_finder/loss", avg_loss, step)
         writer.add_scalar("lr_Finder/lr", lr, step)
 
-        print(f"Step {step+1}/{num_steps}, LR: {lr:.6f}, Loss: {avg_loss:.4f}")
+        pbar.set_postfix({'loss': f"{avg_loss:.4f}", 'lr': f"{lr:.1e}"})
 
-        if avg_loss < best_loss:
-            best_loss = avg_loss
-            best_lr = lr
-
-    
-    print(f"Best LR: {best_lr:.6f} with Loss: {best_loss:.4f}")
     writer.close()
+    print(f"Meilleur lr : {lrs_log[np.argmin(losses_log)]} avec loss : {min(losses_log):.4f}")
 
     # raise NotImplementedError("lr_finder.main doit être implémenté par l'étudiant·e.")
 
