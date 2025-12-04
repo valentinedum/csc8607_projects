@@ -1,6 +1,7 @@
 # Rapport de projet — CSC8607 : Introduction au Deep Learning
 
 > **Consignes générales**
+>
 > - Tenez-vous au **format** et à l’**ordre** des sections ci-dessous.
 > - Intégrez des **captures d’écran TensorBoard** lisibles (loss, métriques, LR finder, comparaisons).
 > - Les chemins et noms de fichiers **doivent** correspondre à la structure du dépôt modèle (ex. `runs/`, `artifacts/best.ckpt`, `configs/config.yaml`).
@@ -25,7 +26,8 @@
 ## 1) Données
 
 ### 1.1 Description du dataset
-- **Source** (lien) : https://huggingface.co/datasets/dpdl-benchmark/caltech_birds2011
+
+- **Source** (lien) : <https://huggingface.co/datasets/dpdl-benchmark/caltech_birds2011>
 - **Type d’entrée** (image / texte / audio / séries) : images et textes
 - **Tâche** (multiclasses, multi-label, régression) : classification multiclasses
 - **Dimensions d’entrée attendues** (`meta["input_shape"]`) : images de tailles variées, après normalisation -> 224×224
@@ -65,11 +67,11 @@ Ce dataset a très peu de particularités. Il n'a aucun label manquant. Ces imag
 Listez précisément les opérations et paramètres (valeurs **fixes**) :
 
 - Vision : resize = [224, 224], center-crop = None, normalize = (mean=[0.48185426, 0.50031734, 0.42832923], std=[0.2270571, 0.2226704, 0.26213554])…
-- Audio : resample = __ Hz, mel-spectrogram (n_mels=__, n_fft=__, hop_length=__), AmplitudeToDB…
-- NLP : tokenizer = __, vocab = __, max_length = __, padding/truncation = __…
+- Audio : resample = __Hz, mel-spectrogram (n_mels=**, n_fft=**, hop_length=__), AmplitudeToDB…
+- NLP : tokenizer = __, vocab =__, max_length = __, padding/truncation =__…
 - Séries : normalisation par canal, fenêtrage = __…
 
-**D6.** Quels **prétraitements** avez-vous appliqués (opérations + **paramètres exacts**) et **pourquoi** ? 
+**D6.** Quels **prétraitements** avez-vous appliqués (opérations + **paramètres exacts**) et **pourquoi** ?
 Comme indiqué en D5 , les images du dataset ont des tailles très variés. Seulement es réseaux de neurones convolutifs ont besoin d'une entrée à taille fixe. Nous redimensionnons donc les images à [224, 224]. Après le resizing, il est important de transformer l'image en tenseur pour pouvoir la traiter avec pytorch. Puis nous normalisons notre tenseur avec mean=[0.48185426, 0.50031734, 0.42832923] et std=[0.2270571, 0.2226704, 0.26213554] car après analyse ce sont les statistiques que nous avons à propos du dataset d'entrainement. Autrement nous aurions pu trouver sur internet les paramètres moyens des datasets d'images connues tels que ImageNet et approximer par ceux-ci.
 NB: Je n'ai pas fait de center-crop car un redimensionnement de l'image avait déjà été fait. On ne voudrait pas qu'une partie de l'oiseau soit accidentellement coupée.
 
@@ -78,9 +80,9 @@ NB: Je n'ai pas fait de center-crop car un redimensionnement de l'image avait d�
 ### 1.4 Augmentation de données — _train uniquement_
 
 - Liste des **augmentations** (opérations + **paramètres** et **probabilités**) :
-  - ex. Flip horizontal p=0.5, RandomResizedCrop scale=__, ratio=__ …
+  - ex. Flip horizontal p=0.5, RandomResizedCrop scale=**, ratio=** …
   - Audio : time/freq masking (taille, nb masques) …
-  - Séries : jitter amplitude=__, scaling=__ …
+  - Séries : jitter amplitude=**, scaling=** …
 
 **D8.** Quelles **augmentations** avez-vous appliquées (paramètres précis) et **pourquoi** ?  
 Nous avons appliqué à notre dataset plusieurs augmentations car nous avons un grand risque de surapprentissage avec très peu d'images par classe (24 environ). Pour que le modèle devienne plus robuste, nous appliquons un randomHorizontalFlip de probabilité 0.5 car un oiseau est le même qu'il soit tourné vers la droite ou la gauche. Nous allons ainsi rendre le modèle invariant à cela.
@@ -121,6 +123,7 @@ D'après la sortie de mon script de test dans data_loading, la forme exact de so
 ### 2.1 Baselines
 
 **M0.**
+
 - **Classe majoritaire** — Métrique : `Accuracy` → score = `0.52%`
 - **Prédiction aléatoire uniforme** — Métrique : `Accuracy` → score = `0.41%`  
 _Ces scores très faibles (proches de 1/200 = 0.5%) confirment que le dataset est équilibré et ne présentent pas de biais. Notre modèle devra faire mieux que ces scores en apprenant des caractéristiques discriminantes_
@@ -151,7 +154,7 @@ Remarque : pour que groups=G soit valide, le nombre de canaux de la convolution 
   - Multi-label : BCEWithLogitsLoss
   - (autre, si votre tâche l’impose)
 
-- **Sortie du modèle** : forme = __(64, 200)__
+- **Sortie du modèle** : forme = **(64, 200)**
 
 - **Nombre total de paramètres** : `1974088`
 
@@ -168,7 +171,8 @@ Ce réseau totalise 1 964 088 paramètres entraînables. Concernant les hyperpar
 
 **M2.** Donnez la **loss initiale** observée et dites si elle est cohérente. Indiquez la forme du batch et la forme de sortie du modèle.
 La loss initiale est de 5.3390, ce qui est cohérent avec la loss théorique (tirée de la loi uniforme) = 5.2983.
-Le batch d'entrée est de taille (64, 3, 224, 224), ce qui confirme que le modèle traite bien un batch de 64 images RVB de taille 224x224. La sortie du modèle (64, 200) correspond bien à un loggit avec 200 classes.
+Le batch d'entrée est de taille (64, 3, 224, 224), ce qui confirme que le modèle traite bien un batch de 64 images RVB de taille 224x224. La sortie du modèle (64, 200) correspond bien à un loggit avec 200 classes
+
 ---
 
 ## 3) Overfit « petit échantillon »
@@ -181,8 +185,9 @@ Le batch d'entrée est de taille (64, 3, 224, 224), ce qui confirme que le modè
 >![train/loss](./artifacts/Train_Loss.svg)
 
 **M3.** Donnez la **taille du sous-ensemble**, les **hyperparamètres** du modèle utilisés, et la **courbe train/loss** (capture). Expliquez ce qui prouve l’overfit.
-Nous avons pris un sous ensemble de 16 images avec les hyperparamètres Nombre de groupes = 2 et nombre de bloc par stage = 2. 
-Avec la courbe de train/loss du dessus, on comprend qu'au bout d'à peine 20 epochs, le modèle ne fait quasi plus d'erreur (loss~=0). Le modèle connait "par coeur" le sous ensemble, il fait preuve d'overfit.
+Nous avons pris un sous ensemble de 16 images avec les hyperparamètres Nombre de groupes = 2 et nombre de bloc par stage = 2.
+Avec la courbe de train/loss du dessus, on comprend qu'au bout d'à peine 20 epochs, le modèle ne fait quasi plus d'erreur (loss~=0). Le modèle connait "par coeur" le sous ensemble, il fait preuve d'overfit
+
 ---
 
 ## 4) LR finder
@@ -193,11 +198,16 @@ Avec la courbe de train/loss du dessus, on comprend qu'au bout d'à peine 20 epo
   - **LR** = `8e-4`
   - **Weight decay** = `1e-4` (valeurs classiques : 1e-5, 1e-4)
 
-> _Insérer capture TensorBoard : courbe LR → loss._
+**Courbe de la loss en fonction du step**
+> ![lr_finder_loss](./artifacts/lr_finder_loss.svg)
+
+**Courbe du learning rate en fonction du step**
+> ![lr_finder_lr](./artifacts/lr_finder_lr.svg)
 
 **M4.** Justifiez en 2–3 phrases le choix du **LR** et du **weight decay**.
 Le learning rate retenu est celui qui optimise la loss soit pour un weight decay de 1e-4. On peut le placer à 1e-3 pour rester dans la fenêtre de stabilité.
-J'ai fait le lr_finder avec un weight decay de 1e-5 mais la loss optimale est la même.
+J'ai fait le lr_finder avec un weight decay de 1e-5 mais la loss optimale est la même
+
 ---
 
 ## 5) Mini grid search (rapide)
@@ -233,6 +243,7 @@ J'ai fait le lr_finder avec un weight decay de 1e-5 mais la loss optimale est la
 - **Checkpoint** : `artifacts/best.ckpt` (selon meilleure métrique val)
 
 > _Insérer captures TensorBoard :_
+>
 > - `train/loss`, `val/loss`
 > - `val/accuracy` **ou** `val/f1` (classification)
 
@@ -292,18 +303,16 @@ python -m src.train --config configs/config.yaml --max_epochs 15
 python -m src.evaluate --config configs/config.yaml --checkpoint artifacts/best.ckpt
 ````
 
-* **Artifacts requis présents** :
+- **Artifacts requis présents** :
 
-  * [ ] `runs/` (runs utiles uniquement)
-  * [ ] `artifacts/best.ckpt`
-  * [ ] `configs/config.yaml` aligné avec la meilleure config
+  - [ ] `runs/` (runs utiles uniquement)
+  - [ ] `artifacts/best.ckpt`
+  - [ ] `configs/config.yaml` aligné avec la meilleure config
 
 ---
 
 ## 12) Références (courtes)
 
-* PyTorch docs des modules utilisés (Conv2d, BatchNorm, ReLU, LSTM/GRU, transforms, etc.).
-* Lien dataset officiel (et/ou HuggingFace/torchvision/torchaudio).
-* Toute ressource externe substantielle (une ligne par référence).
-
-
+- PyTorch docs des modules utilisés (Conv2d, BatchNorm, ReLU, LSTM/GRU, transforms, etc.).
+- Lien dataset officiel (et/ou HuggingFace/torchvision/torchaudio).
+- Toute ressource externe substantielle (une ligne par référence).
