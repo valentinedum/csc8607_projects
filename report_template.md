@@ -188,15 +188,16 @@ Avec la courbe de train/loss du dessus, on comprend qu'au bout d'à peine 20 epo
 ## 4) LR finder
 
 - **Méthode** : balayage LR (log-scale), quelques itérations, log `(lr, loss)`
-- **Fenêtre stable retenue** : `_____ → _____`
+- **Fenêtre stable retenue** : `1e-7 → 1e-3`
 - **Choix pour la suite** :
-  - **LR** = `_____`
-  - **Weight decay** = `_____` (valeurs classiques : 1e-5, 1e-4)
+  - **LR** = `8e-4`
+  - **Weight decay** = `1e-4` (valeurs classiques : 1e-5, 1e-4)
 
 > _Insérer capture TensorBoard : courbe LR → loss._
 
 **M4.** Justifiez en 2–3 phrases le choix du **LR** et du **weight decay**.
-
+Le learning rate retenu est celui qui optimise la loss soit pour un weight decay de 1e-4. On peut le placer à 1e-3 pour rester dans la fenêtre de stabilité.
+J'ai fait le lr_finder avec un weight decay de 1e-5 mais la loss optimale est la même.
 ---
 
 ## 5) Mini grid search (rapide)

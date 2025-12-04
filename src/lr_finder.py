@@ -39,7 +39,7 @@ def main():
     start = 1e-7
     end = 1e-1
     num_steps = 100
-    weight_decay = config['train']['optimizer']['weight_decay']
+    weight_decay = float(config['train']['optimizer']['weight_decay'])
     learning_rates = np.logspace(math.log10(start), math.log10(end), num=num_steps)
 
     train_loader, _, _, _ = get_dataloaders(config)
@@ -103,7 +103,7 @@ def main():
 
 
         writer.add_scalar("lr_finder/loss", avg_loss, step)
-        writer.add_scalar("lr_Finder/lr", lr, step)
+        writer.add_scalar("lr_finder/lr", lr, step)
 
         pbar.set_postfix({'loss': f"{avg_loss:.4f}", 'lr': f"{lr:.1e}"})
 

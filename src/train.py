@@ -71,7 +71,7 @@ def main():
     model = build_model(config).to(device)
 
     learning_rate = config['train']['optimizer']['lr']
-    weight_decay = config['train']['optimizer']['weight_decay']
+    weight_decay = 0.0
     num_epochs = args.max_epochs or config['train']['epochs']
     batch_size = config['train']['batch_size']
 
