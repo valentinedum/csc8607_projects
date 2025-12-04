@@ -38,7 +38,7 @@ def main():
 
     start = 1e-7
     end = 1e-1
-    num_steps = 20
+    num_steps = 100
     weight_decay = config['train']['optimizer']['weight_decay']
     learning_rates = np.logspace(math.log10(start), math.log10(end), num=num_steps)
 
@@ -89,12 +89,12 @@ def main():
         if step == 0:
             avg_loss = current_loss
         else:
-            avg_loss = 0.9 * avg_loss + 0.1 * current_loss
+            avg_loss = 0.98 * avg_loss + 0.02 * current_loss
 
         if avg_loss < best_loss:
             best_loss = avg_loss
         
-        losses_log.append(loss.item())
+        losses_log.append(avg_loss)
         lrs_log.append(lr)
         
         if avg_loss > 4 * best_loss and step > 10:
