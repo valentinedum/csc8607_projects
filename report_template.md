@@ -213,21 +213,31 @@ J'ai fait le lr_finder avec un weight decay de 1e-5 mais la loss optimale est la
 ## 5) Mini grid search (rapide)
 
 - **Grilles** :
-  - LR : `{_____ , _____ , _____}`
-  - Weight decay : `{1e-5, 1e-4}`
-  - Hyperparamètre modèle A : `{_____, _____}`
-  - Hyperparamètre modèle B : `{_____, _____}`
+  - LR : `{0.0005, 0.001, 0.005}`
+  - Weight decay : `{0.0, 0.0005}`
+  - Hyperparamètre modèle A (num_blocks) : `{2, 3}`
+  - Hyperparamètre modèle B (groups) : `{2, 4}`
 
-- **Durée des runs** : `_____` époques par run (1–5 selon dataset), même seed
+- **Durée des runs** : `3` époques par run, même seed
 
-| Run (nom explicite) | LR  | WD  | Hyp-A | Hyp-B | Val metric (nom=_____) | Val loss | Notes |
-| ------------------- | --- | --- | ----- | ----- | ---------------------- | -------- | ----- |
-|                     |     |     |       |       |                        |          |       |
-|                     |     |     |       |       |                        |          |       |
+| Run | LR | WD | num_blocks | groups | Val accuracy | Val loss | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `proj22_lr=0.0005_bs=32_wd=0.0_blk=2_grp=2` | 0.0005 | 0.0 | 2 | 2 | **0.0275** | **4.9895** | 🏆 **MEILLEUR RÉSULTAT**: Convergence très stable (5.28→5.10→5.05), vitesse rapide, pas d'overfitting observé et meilleure accuracy et loss. |
+| `proj22_lr=0.0005_bs=32_wd=0.0005_blk=2_grp=2` | 0.0005 | **0.0005** | 2 | 2 | 0.0259 | 5.0245 | **Très stable.** Le WD ajoute une régularisation, mais réduit légèrement la précision. |
+| `proj22_lr=0.0005_bs=64_wd=0.0005_blk=2_grp=2` | 0.0005 | 0.0005 | 2 | 2 | 0.0259 | 5.0336 | **Impact nul du Batch Size.** Passer à BS=64 n'améliore pas vraiment les performances par rapport à BS=32. |
+| `proj22_lr=0.0005_bs=32_wd=0.0_blk=2_grp=4` | 0.0005 | 0.0 | 2 | **4** | 0.0209 | 5.0123 | **Sur-régularisation.** `groups=4` ralentit la convergence et fait chuter l'accuracy. |
+| `proj22_lr=0.0005_bs=32_wd=0.0_blk=3_grp=2` | 0.0005 | 0.0 | **3** | 2 | 0.0150 | 5.0743 | **Trop complexe.** `blk=3` ajoute trop de paramètres. Convergence lente et chute massive d'accuracy (-45%). |
 
-> _Insérer capture TensorBoard (onglet HParams/Scalars) ou tableau récapitulatif._
+> Il n'y a pas de capture tensorboard tout simplement parce que j'ai l'impression qu'il y a un probleme UI dans la fenêtre HParams. Mes metriques d'accuracy et de loss ne s'affiche pas alors que leurs colonnes existent et que les autres métriques aussi. J'ai regardé sur internet et ça à l'air d'être un probleme des nouvelles versions de tensorboard. Comme mes résultats sont quand même affichés dans scalar, je les ai récupérées ici. `test_tb/py` ne fonctionnait pas de même.
 
 **M5.** Présentez la **meilleure combinaison** (selon validation) et commentez l’effet des **2 hyperparamètres de modèle** sur les courbes (stabilité, vitesse, overfit).
+La meilleure combinaison est le Run 1 (LR=0.0005, BS=32, WD=0.0, Blocks=2, Groups=2). Il atteint la plus haute Accuracy de Validation (2.75%) mais aussi la plus basse Validation Loss (4.9895) après 3 epochs.
+Concernant les impacts des hyperparamètres sur le modèle, les voici:
+
+1. blk (nombre de blocs)
+  On remarque qu'en augmentant le nombre de blocs la stabilité se dégrade l'accuracy aussi (-45%). Le modèle devient trop complexe à optimiser pour ce dataset (underfitting)et donc la convergence est lente.
+2. groups (Régularisation)
+  On constate qu'en augmentant le  goupss la convergence ralentie, on sur-régularise, ce qui bride le modèle et la fait perdre en accuracy.
 
 ---
 

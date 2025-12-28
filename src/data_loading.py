@@ -83,9 +83,9 @@ def get_dataloaders(config: dict):
         "input_shape": tuple(config['model']['input_shape']), 
     }
 
-    train_loader = DataLoader(trainset, batch_size=config['train']['batch_size'], shuffle=True, pin_memory=True)
-    val_loader = DataLoader(valset, batch_size=config['train']['batch_size'], shuffle=False, pin_memory=True)
-    test_loader = DataLoader(testset, batch_size=config['train']['batch_size'], shuffle=False, pin_memory=True)
+    train_loader = DataLoader(trainset, batch_size=config['train']['batch_size'], shuffle=True, num_workers=config['dataset']['num_workers'], pin_memory=True)
+    val_loader = DataLoader(valset, batch_size=config['train']['batch_size'], shuffle=False, num_workers=config['dataset']['num_workers'], pin_memory=True)
+    test_loader = DataLoader(testset, batch_size=config['train']['batch_size'], shuffle=False, num_workers=config['dataset']['num_workers'], pin_memory=True)
 
 
     return train_loader, val_loader, test_loader, meta

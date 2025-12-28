@@ -23,15 +23,13 @@ from torch.utils.tensorboard import SummaryWriter
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, required=True)
-    parser.add_argument("--seed", type=int, default=None)
     args = parser.parse_args()
     # À implémenter par l'étudiant·e :
 
     with open(args.config, "r") as f:
         config = yaml.safe_load(f)
 
-    if args.seed is not None:
-        set_seed(args.seed)
+    set_seed(config['train']['seed'])
     
     device = get_device(prefer="auto")
     print("Device : ", device)

@@ -15,8 +15,8 @@ def build_model(config: dict):
     num_classes = config['model']['num_classes']
     hidden_sizes = config['model']['hidden_sizes']
     activation_name = config['model']['activation']
-    num_blocks = 2
-    group = 2
+    num_blocks = config['model']['num_blocks']
+    group = config['model']['groups']
 
     # Première couche d'initialisation
     layers.append(nn.Conv2d(in_channels=input_shape[0], out_channels=hidden_sizes[0], kernel_size=3, padding=1))
