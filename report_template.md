@@ -244,12 +244,12 @@ Concernant les impacts des hyperparamètres sur le modèle, les voici:
 ## 6) Entraînement complet (10–20 époques, sans scheduler)
 
 - **Configuration finale** :
-  - LR = `_____`
-  - Weight decay = `_____`
+  - LR = `0.0005`
+  - Weight decay = `0.0`
   - Hyperparamètre modèle A = `_____`
   - Hyperparamètre modèle B = `_____`
-  - Batch size = `_____`
-  - Époques = `_____` (10–20)
+  - Batch size = `32`
+  - Époques = `20` (10–20)
 - **Checkpoint** : `artifacts/best.ckpt` (selon meilleure métrique val)
 
 > _Insérer captures TensorBoard :_
@@ -258,7 +258,7 @@ Concernant les impacts des hyperparamètres sur le modèle, les voici:
 > - `val/accuracy` **ou** `val/f1` (classification)
 
 **M6.** Montrez les **courbes train/val** (loss + métrique). Interprétez : sous-apprentissage / sur-apprentissage / stabilité d’entraînement.
-
+Les performances du modèles étant très faibles j'ai tenté de voir si cela venait de ma pipeline ou du modèle "trop simpliste". J'ai donc fait tourner mon code avec comme modèle resnet avec les mêmes hyperparamètres et j'obtiens presque 19% d'accuracy. En réalité notre modèle est en sous apprentissage, il faudrait le lancer sur plus d'epochs et complexifier son architecture qui semble un peu simpliste.
 ---
 
 ## 7) Comparaisons de courbes (analyse)

@@ -16,6 +16,7 @@ from datasets import load_dataset, ClassLabel, Image
 from torchvision import transforms as T
 from augmentation import get_augmentation_transforms
 from preporcessing import get_preprocess_transforms
+from utils import set_seed
 
 def get_dataloaders(config: dict):
     """
@@ -25,6 +26,8 @@ def get_dataloaders(config: dict):
 
     # Chargement des données
     root_path = os.path.expanduser(config['dataset']['root'])
+
+    set_seed(config['train']['seed'])
     
     data_files = {
         "train": os.path.join(root_path, config['dataset']['split']['train'], "*.parquet"),

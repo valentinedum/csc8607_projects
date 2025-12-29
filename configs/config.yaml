@@ -46,20 +46,20 @@ model:
     num_layers: null
     bidirectional: false
   groups: 2
-  num_blocks : 2           
+  num_blocks : 2          
 
 train:
   seed: 42
   device: auto              # "cpu", "cuda", ou "auto"
-  batch_size: 64
-  epochs: 10
+  batch_size: 32
+  epochs: 20
   max_steps: null           # entier ou null
   overfit_small: false      # true pour sur-apprendre sur un petit échantillon
 
   optimizer:
     name: adam              # sgd/adam/rmsprop
-    lr: 0.001
-    weight_decay: 1e-4
+    lr: 0.0005
+    weight_decay: 0.0
     momentum: 0.9           # utile si SGD
 
   scheduler:
