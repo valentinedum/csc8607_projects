@@ -7,7 +7,7 @@ dataset:
     val: "val"
     test: "test"
   download: true            # si supporté
-  num_workers: 0          # mettre 4
+  num_workers: 1          # réduit pour éviter OOM GPU
   shuffle: true
 
 preprocess:
@@ -21,17 +21,16 @@ preprocess:
 augment:
   # data augmentation (laisser null si non utilisée)
   random_flip: true             # true/false
-  random_crop: null           # paramètres ou null
-  random_rotation: true
-  color_jitter:             # paramètres ou null
-    brightness: 0.2
-    contrast: 0.2
-    saturation: 0.2
-    hue: 0.1          
+  random_rotation: false        # true/false
+  color_jitter:
+    brightness: 0.05
+    contrast: 0.05
+    saturation: 0.0
+    hue: 0.0     
   spec_augment: null            # pour audio : paramètres ou null
 
 model:
-  type: TODO                # ex: "resnet18", "mlp", "lstm", ...
+  type: cnn               # ex: "resnet18", "mlp", "lstm", ...
   num_classes: 200
   input_shape: [3, 224, 224] # ex: [3, 32, 32] ou null
   hidden_sizes: [64, 128, 256]            # ex: [256, 128] ou null
@@ -45,19 +44,21 @@ model:
     hidden_size: null
     num_layers: null
     bidirectional: false
+  groups: 4
+  num_blocks : 2          
 
 train:
   seed: 42
   device: auto              # "cpu", "cuda", ou "auto"
   batch_size: 32
-  epochs: 10
+  epochs: 20
   max_steps: null           # entier ou null
   overfit_small: false      # true pour sur-apprendre sur un petit échantillon
 
   optimizer:
     name: adam              # sgd/adam/rmsprop
-    lr: 0.001
-    weight_decay: 1e-4
+    lr: 0.0005
+    weight_decay: 0.0       # régularisation L2
     momentum: 0.9           # utile si SGD
 
   scheduler:
@@ -72,9 +73,10 @@ metrics:
   regression: []            # ex: ["mae", "rmse"]
 
 hparams:                    # espace pour mini grid search
-  lr: [0.0005, 0.001, 0.005]
-  batch_size: [32, 64]
-  weight_decay: [0.0, 0.0005]
+  lr: [0.0005, 0.001, 0.002]
+  weight_decay: [0.0, 0.0001]
+  num_blocks : [2, 3]
+  groups: [2, 4]
 
 paths:
   runs_dir: "./runs"

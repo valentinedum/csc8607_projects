@@ -16,6 +16,7 @@ from datasets import load_dataset, ClassLabel, Image
 from torchvision import transforms as T
 from augmentation import get_augmentation_transforms
 from preporcessing import get_preprocess_transforms
+from utils import set_seed
 
 def get_dataloaders(config: dict):
     """
@@ -25,6 +26,8 @@ def get_dataloaders(config: dict):
 
     # Chargement des données
     root_path = os.path.expanduser(config['dataset']['root'])
+
+    set_seed(config['train']['seed'])
     
     data_files = {
         "train": os.path.join(root_path, config['dataset']['split']['train'], "*.parquet"),
@@ -55,15 +58,16 @@ def get_dataloaders(config: dict):
     valset = split['test']
 
     # Appliquer les transformations
-    preprocess_transforms = get_preprocess_transforms(config)
+    preprocess_train = get_preprocess_transforms(config, apply_random_erasing=True)
+    preprocess_val_test = get_preprocess_transforms(config, apply_random_erasing=False)
     augment_transforms = get_augmentation_transforms(config)
 
     train_pipeline = T.Compose([
         augment_transforms,
-        preprocess_transforms,
+        preprocess_train,
     ])
 
-    val_test_pipeline = preprocess_transforms
+    val_test_pipeline = preprocess_val_test
     
     def transform_train(batch):
         batch['image'] = [train_pipeline(img) for img in batch['image']]
@@ -83,9 +87,9 @@ def get_dataloaders(config: dict):
         "input_shape": tuple(config['model']['input_shape']), 
     }
 
-    train_loader = DataLoader(trainset, batch_size=config['train']['batch_size'], shuffle=True, pin_memory=True)
-    val_loader = DataLoader(valset, batch_size=config['train']['batch_size'], shuffle=False, pin_memory=True)
-    test_loader = DataLoader(testset, batch_size=config['train']['batch_size'], shuffle=False, pin_memory=True)
+    train_loader = DataLoader(trainset, batch_size=config['train']['batch_size'], shuffle=True, num_workers=config['dataset']['num_workers'], pin_memory=True)
+    val_loader = DataLoader(valset, batch_size=config['train']['batch_size'], shuffle=False, num_workers=config['dataset']['num_workers'], pin_memory=True)
+    test_loader = DataLoader(testset, batch_size=config['train']['batch_size'], shuffle=False, num_workers=config['dataset']['num_workers'], pin_memory=True)
 
 
     return train_loader, val_loader, test_loader, meta

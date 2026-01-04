@@ -16,13 +16,13 @@ def get_augmentation_transforms(config: dict):
         transform_list.append(T.RandomHorizontalFlip(0.5))
 
     # 2. Color Jitter
-    color_jitter_params = augment_config['color_jitter']
+    color_jitter_params = augment_config.get('color_jitter')
     if color_jitter_params:
         transform_list.append(T.ColorJitter(**color_jitter_params))
 
     # 3. Random Rotation
     if augment_config.get('random_rotation', False):
-        transform_list.append(T.RandomRotation(degrees=15))
+        transform_list.append(T.RandomRotation(degrees=5))
 
     return T.Compose(transform_list)
     # raise NotImplementedError("get_augmentation_transforms doit être implémentée par l'étudiant·e.")
