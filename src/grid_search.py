@@ -42,7 +42,6 @@ def main():
     hparams_config = config["hparams"]
     hparams_combinations = list(product(
         hparams_config['lr'],
-        hparams_config['batch_size'],
         hparams_config['weight_decay'],
         hparams_config['num_blocks'],
         hparams_config['groups']
@@ -51,14 +50,13 @@ def main():
     print(f"Grid Search : {len(hparams_combinations)} combinaisons à tester")
 
     # --- BOUCLE PRINCIPALE SUR LES COMBINAISONS ---
-    for idx, (lr, batch_size, weight_decay, num_blocks, groups) in enumerate(hparams_combinations):
+    for idx, (lr, weight_decay, num_blocks, groups) in enumerate(hparams_combinations):
         print(f"\n--- Run {idx+1}/{len(hparams_combinations)} ---")
-        print(f"LR={lr}, BS={batch_size}, WD={weight_decay}, Blocks={num_blocks}, Groups={groups}")
+        print(f"LR={lr}, WD={weight_decay}, Blocks={num_blocks}, Groups={groups}")
         
         set_seed(config['train']['seed'])
         
         # Mettre à jour la config
-        config['train']['batch_size'] = batch_size
         config['train']['optimizer']['lr'] = lr
         config['train']['optimizer']['weight_decay'] = weight_decay
         config['model']['num_blocks'] = num_blocks
@@ -70,7 +68,7 @@ def main():
         optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
 
         # Initialiser TensorBoard Writer pour ce run
-        run_name = f"proj22_lr={lr}_bs={batch_size}_wd={weight_decay}_blk={num_blocks}_grp={groups}"
+        run_name = f"proj22_lr={lr}_wd={weight_decay}_blk={num_blocks}_grp={groups}"
         writer = SummaryWriter(log_dir=f"{runs_dir}/grid_search/{run_name}")
 
         # Initialiser les trackers
@@ -132,7 +130,6 @@ def main():
         # --- HPARAMS ---
         hparams_dict = {
             'lr': lr,
-            'batch_size': batch_size,
             'weight_decay': weight_decay,
             'num_blocks': num_blocks,
             'groups': groups

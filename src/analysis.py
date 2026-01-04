@@ -11,9 +11,6 @@ from torchvision import transforms as T
 from random import sample as randomsample
 from datasets import load_dataset, ClassLabel, Image
 from torchmetrics.classification import MulticlassAccuracy, MulticlassF1Score
-
-# --- IMPORTS ---
-
 from preporcessing import get_preprocess_transforms
 from augmentation import get_augmentation_transforms
 from model import build_model
@@ -21,10 +18,8 @@ from utils import count_parameters
 
 def get_sorted_counts(dataset, num_classes):
     """
-    Retourne une liste des comptes d'exemples par classe.
-    Optimisé pour HuggingFace datasets (accès colonne rapide).
+    Retourne une liste de nombres d'exemples par classe.
     """
-    # Accès direct à la colonne sans charger les images
     labels = dataset['label'] 
     counts = Counter(labels)
     return [counts.get(i, 0) for i in range(num_classes)]
@@ -33,18 +28,16 @@ def plot_distribution(sorted_counts, class_names, title):
     """
     Crée un graphique de la distribution des classes.
     """
-    # Ajuster la largeur si beaucoup de classes
     width = max(12, len(class_names) / 5)
     fig, ax = plt.subplots(figsize=(width, 5))
     
     indices = range(len(class_names))
-    ax.bar(indices, sorted_counts) # Bar chart est plus lisible que plot
+    ax.bar(indices, sorted_counts)
     
     ax.set_title(title)
     ax.set_xlabel("Classe")
     ax.set_ylabel("Nombre d'exemples")
-    
-    # N'afficher qu'un label sur N si trop de classes
+
     step = max(1, len(class_names) // 30)
     ax.set_xticks(list(indices)[::step])
     ax.set_xticklabels([class_names[i] for i in indices][::step], rotation=45, ha='right', fontsize=8)
@@ -54,7 +47,7 @@ def plot_distribution(sorted_counts, class_names, title):
 
 def compute_statistics(dataset, config):
     """
-    Calcule moyenne/std sur un ECHANTILLON (pour ne pas exploser la RAM).
+    Calcule moyenne/std sur un echantillon.
     """
     print("   Calcul des stats (sur un échantillon de 1000 images)...")
     target_size = tuple(config['model']['input_shape'][1:]) # (224, 224)
@@ -172,67 +165,67 @@ def analyze_data():
     class_names = train.features['label'].names
 
 
-    # # 2. STATISTIQUES DE DISTRIBUTION
-    # print("Génération des graphiques de distribution...")
-    # writer = SummaryWriter(log_dir="runs/data_analysis")
-    # train_counts = get_sorted_counts(train, num_classes)
-    # val_counts = get_sorted_counts(val, num_classes)
-    # test_counts = get_sorted_counts(test, num_classes)
+    # 2. STATISTIQUES DE DISTRIBUTION
+    print("Génération des graphiques de distribution...")
+    writer = SummaryWriter(log_dir="runs/data_analysis")
+    train_counts = get_sorted_counts(train, num_classes)
+    val_counts = get_sorted_counts(val, num_classes)
+    test_counts = get_sorted_counts(test, num_classes)
 
-    # fig_train = plot_distribution(train_counts, class_names, "Distribution Train")
-    # fig_val = plot_distribution(val_counts, class_names, "Distribution Val")
-    # fig_test = plot_distribution(test_counts, class_names, "Distribution Test")
+    fig_train = plot_distribution(train_counts, class_names, "Distribution Train")
+    fig_val = plot_distribution(val_counts, class_names, "Distribution Val")
+    fig_test = plot_distribution(test_counts, class_names, "Distribution Test")
 
-    # writer.add_figure("Distribution/Train", fig_train)
-    # writer.add_figure("Distribution/Val", fig_val)
-    # writer.add_figure("Distribution/Test", fig_test)
+    writer.add_figure("Distribution/Train", fig_train)
+    writer.add_figure("Distribution/Val", fig_val)
+    writer.add_figure("Distribution/Test", fig_test)
     
-    # print(f"Tailles -> Train: {len(train)}, Val: {len(val)}, Test: {len(test)}")
+    print(f"Tailles -> Train: {len(train)}, Val: {len(val)}, Test: {len(test)}")
 
-    # # 3. ANALYSE DES VALEURS MANQUANTES
-    # for feature in train.features:
-    #     train_missing = missing_values(train, feature)
-    #     val_missing = missing_values(val, feature)
-    #     test_missing = missing_values(test, feature)
-    #     print(f"Valeurs manquantes pour '{feature}' -> Train: {train_missing}, Val: {val_missing}, Test: {test_missing}")
+    # 3. ANALYSE DES VALEURS MANQUANTES
+    for feature in train.features:
+        train_missing = missing_values(train, feature)
+        val_missing = missing_values(val, feature)
+        test_missing = missing_values(test, feature)
+        print(f"Valeurs manquantes pour '{feature}' -> Train: {train_missing}, Val: {val_missing}, Test: {test_missing}")
     
-    # # 4. ANALYSE DES IMAGES (Tailles & Modes)
-    # train_tailles, train_modes = image_analysis(train)
-    # val_tailles, val_modes = image_analysis(val)
-    # test_tailles, test_modes = image_analysis(test)
-    # print(f"Nombre de tailles d'images différentes - Train: {len(train_tailles)}, Val: {len(val_tailles)}, Test: {len(test_tailles)}")
-    # print(f"Modes d'images - Train: {train_modes}, Val: {val_modes}, Test: {test_modes}")
+    # 4. ANALYSE DES IMAGES (Tailles & Modes)
+    train_tailles, train_modes = image_analysis(train)
+    val_tailles, val_modes = image_analysis(val)
+    test_tailles, test_modes = image_analysis(test)
+    print(f"Nombre de tailles d'images différentes - Train: {len(train_tailles)}, Val: {len(val_tailles)}, Test: {len(test_tailles)}")
+    print(f"Modes d'images - Train: {train_modes}, Val: {val_modes}, Test: {test_modes}")
     
-    # # 5. STATISTIQUES DE PIXELS (Mean/Std)
-    # mean, std = compute_statistics(train, config)
-    # print(f"Stats calculées -> Mean: {mean.numpy()}, Std: {std.numpy()}")
+    # 5. STATISTIQUES DE PIXELS (Mean/Std)
+    mean, std = compute_statistics(train, config)
+    print(f"Stats calculées -> Mean: {mean.numpy()}, Std: {std.numpy()}")
     
-    # # 6. VISUALISATION AUGMENTATION ET PREPROCESSING
-    # print("Génération des exemples d'augmentation...")
+    # 6. VISUALISATION AUGMENTATION ET PREPROCESSING
+    print("Génération des exemples d'augmentation...")
     
-    # augment_pipeline = get_augmentation_transforms(config)
-    # preprocess_pipeline = get_preprocess_transforms(config)
+    augment_pipeline = get_augmentation_transforms(config)
+    preprocess_pipeline = get_preprocess_transforms(config)
     
-    # indices = randomsample(range(len(train)), 5)
-    # raw_images = [train[i]['image'] for i in indices]
+    indices = randomsample(range(len(train)), 5)
+    raw_images = [train[i]['image'] for i in indices]
 
-    # # On va afficher : Originale -> Augmentée -> Finale
-    # for idx, pil_img in enumerate(raw_images):
-    #     writer.add_image(f"Exemple_{idx}/Original", T.ToTensor()(pil_img), 0)
+    # On va afficher : Originale -> Augmentée -> Finale
+    for idx, pil_img in enumerate(raw_images):
+        writer.add_image(f"Exemple_{idx}/Original", T.ToTensor()(pil_img), 0)
         
-    #     aug_img = augment_pipeline(pil_img)
-    #     writer.add_image(f"Exemple_{idx}/Augmented", T.ToTensor()(aug_img), 0)
+        aug_img = augment_pipeline(pil_img)
+        writer.add_image(f"Exemple_{idx}/Augmented", T.ToTensor()(aug_img), 0)
 
-    #     final_tensor = preprocess_pipeline(aug_img)
+        final_tensor = preprocess_pipeline(aug_img)
         
-    #     writer.add_image(f"Exemple_{idx}/FinalInput", final_tensor, 0)
+        writer.add_image(f"Exemple_{idx}/FinalInput", final_tensor, 0)
 
-    # writer.close()
-    # print("\nAnalyse terminée. Lancez TensorBoard : tensorboard --logdir runs/data_analysis")
+    writer.close()
+    print("\nAnalyse terminée. Lancez TensorBoard : tensorboard --logdir runs/data_analysis")
 
-    # # 7. CALCUL DES BASELINES
-    # print("\nCalcul des baselines...")
-    # calculate_baselines(train, test, num_classes, config)
+    # 7. CALCUL DES BASELINES
+    print("\nCalcul des baselines...")
+    calculate_baselines(train, test, num_classes, config)
 
     # 8. PARAMETRES ENTRAINABLES
     countable_parameters = count_parameters(build_model(config))

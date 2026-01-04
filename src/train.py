@@ -78,6 +78,7 @@ def main():
     learning_rate = config['train']['optimizer']['lr']
     weight_decay = 0.0
     num_epochs = args.max_epochs or config['train']['epochs']
+    print(f"Nombre d'epochs : {num_epochs}")
     batch_size = config['train']['batch_size']
 
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
@@ -119,6 +120,7 @@ def main():
         writer_overfit = SummaryWriter(log_dir=os.path.join(runs_dir, "overfit_small"))
         images = images[:16]
         labels = labels[:16]
+        
 
         pbar = tqdm(range(50), desc="Overfitting")
         

@@ -21,13 +21,12 @@ preprocess:
 augment:
   # data augmentation (laisser null si non utilisée)
   random_flip: true             # true/false
-  random_crop: null           # paramètres ou null
-  random_rotation: true
-  color_jitter:             # paramètres ou null
-    brightness: 0.2
-    contrast: 0.2
-    saturation: 0.2
-    hue: 0.1          
+  random_rotation: false        # true/false
+  color_jitter:
+    brightness: 0.05
+    contrast: 0.05
+    saturation: 0.0
+    hue: 0.0     
   spec_augment: null            # pour audio : paramètres ou null
 
 model:
@@ -45,7 +44,7 @@ model:
     hidden_size: null
     num_layers: null
     bidirectional: false
-  groups: 2
+  groups: 4
   num_blocks : 2          
 
 train:
@@ -59,7 +58,7 @@ train:
   optimizer:
     name: adam              # sgd/adam/rmsprop
     lr: 0.0005
-    weight_decay: 0.0
+    weight_decay: 0.0       # régularisation L2
     momentum: 0.9           # utile si SGD
 
   scheduler:
@@ -74,9 +73,8 @@ metrics:
   regression: []            # ex: ["mae", "rmse"]
 
 hparams:                    # espace pour mini grid search
-  lr: [0.0005, 0.001, 0.005]
-  batch_size: [32, 64]
-  weight_decay: [0.0, 0.0005]
+  lr: [0.0005, 0.001, 0.002]
+  weight_decay: [0.0, 0.0001]
   num_blocks : [2, 3]
   groups: [2, 4]
 

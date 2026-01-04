@@ -58,15 +58,16 @@ def get_dataloaders(config: dict):
     valset = split['test']
 
     # Appliquer les transformations
-    preprocess_transforms = get_preprocess_transforms(config)
+    preprocess_train = get_preprocess_transforms(config, apply_random_erasing=True)
+    preprocess_val_test = get_preprocess_transforms(config, apply_random_erasing=False)
     augment_transforms = get_augmentation_transforms(config)
 
     train_pipeline = T.Compose([
         augment_transforms,
-        preprocess_transforms,
+        preprocess_train,
     ])
 
-    val_test_pipeline = preprocess_transforms
+    val_test_pipeline = preprocess_val_test
     
     def transform_train(batch):
         batch['image'] = [train_pipeline(img) for img in batch['image']]
