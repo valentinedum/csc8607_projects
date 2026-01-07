@@ -291,20 +291,32 @@ Les approches pré-deep learning sur CUB-200-2011, utilisant des descripteurs SI
 > _Superposez plusieurs runs dans TensorBoard et insérez 2–3 captures :_
 
 - **Variation du LR** (impact au début d’entraînement)
+![lr_comparison](./artifacts/comparison/lr.png)
 - **Variation du weight decay** (écart train/val, régularisation)
-- **Variation des 2 hyperparamètres de modèle** (convergence, plateau, surcapacité)
+![wd_comparison](./artifacts/comparison/wd.png)
+- **Variation des 2 hyperparamètres de modèle (groups et nombre de blocs)** (convergence, plateau, surcapacité)
+![blk_comparison](./artifacts/comparison/blk.png)
+![grp_comparison](./artifacts/comparison/grp.png)
 
 **M7.** Trois **comparaisons** commentées (une phrase chacune) : LR, weight decay, hyperparamètres modèle — ce que vous attendiez vs. ce que vous observez.
 
-Pour cela, nous allons 
+- En augmentant le learning rate, on s'attendait à ce que cela accélère la convergence initiale, mais on observe qu'il engendre rapidement de l'instabilité (oscillations sur la validation), rendant le taux plus faible (0.0005) finalement plus performant et régulier.
+- En ajoutant de la régularisation (weight decay), on s'attendait à ce que celaréduise le sur-apprentissage, mais étant donné que le modèle est en sous-apprentissage (underfitting), on observe que l'ajout de weight decay (1e-4) ne fait que freiner légèrement la descente de la loss par rapport à l'absence de régularisation.
+- Alors que nous étions partis sur une petite profondeur de `blk=2`, on remarque que malgré la difficulté d'apprendr au début, la pente autour de l'epoch 10 est plus intéressante avec une profondeur `blk=3` qu'une `blk=2`.
+- Par contre, comme anticipé, l'augmentation de la largeur `grp=4` est surement l'hyperparamètre le plus significatif, il accélère en effet énormement l'apprentissage.
+
 ---
 
 ## 8) Itération supplémentaire (si temps)
 
-- **Changement(s)** : `_____` (resserrage de grille, nouvelle valeur d’un hyperparamètre, etc.)
-- **Résultat** : `_____` (val metric, tendances des courbes)
+- **Changement(s)** : `blk=3` (resserrage de grille, nouvelle valeur d’un hyperparamètre, etc.)
+- **Résultat** : `10,34%` (val metric, tendances des courbes)
 
 **M8.** Décrivez cette itération, la motivation et le résultat.
+
+Nous choisissons d'uniquement changer le nombre de blocs en profondeur, en espérant améliorer nos performances comme le suggère l'analyse de courbes du dessus.
+
+En effet, en augmentant le nombre de blocs donc la profondeur du réseau, nous avons gagné en capacités. La meilleure accuracy est de 10,34% obtenue à l'epoch 19.
 
 ---
 
@@ -312,17 +324,22 @@ Pour cela, nous allons
 
 - **Checkpoint évalué** : `artifacts/best.ckpt`
 - **Métriques test** :
-  - Metric principale (nom = `_____`) : `_____`
-  - Metric(s) secondaire(s) : `_____`
+  - Metric principale (nom = `accuracy`) : `9,18%`
+  - Metric(s) secondaire(s) : `F1-score macro` : `7%`
 
 **M9.** Donnez les **résultats test** et comparez-les à la validation (écart raisonnable ? surapprentissage probable ?).
+
+D'autres métriques telles que la matrice de confusion on été affichées. Mais avec 200 classes, c'est beaucoup moins visuel. On arrive tout de même à distinguer une diagonale plus foncée ce qui va en faveur d'un modèle qui a appris.
+![confusion_matrix](./artifacts/evaluation/confusion_matrix.png)
+
+Sinon l'écart test/val est raisonnable (+1%) → pas de surapprentissage, le modèle généralise correctement. Le F1 Score est plus petit que l'accuracy, surement à cause du déséquilibre du dataset.
 
 ---
 
 ## 10) Limites, erreurs & bug diary (court)
 
 - **Limites connues** (données, compute, modèle) : modèle très simpliste, non préentrainé, dataset petit surtout la taille du dataset d'entrainement (environ 5000 images ce qui est très peu comparé aux datasets classiques d'images tels que ImageNet qui compte plus de 1M d'images)
-- **Erreurs rencontrées** (shape mismatch, divergence, NaN…) et **solutions** : shape mismatch lors des tentatives de preprocessing ou d'augmentations
+- **Erreurs rencontrées** (shape mismatch, divergence, NaN…) et **solutions** : shape mismatch lors des tentatives de preprocessing ou d'augmentations.
 - **Idées « si plus de temps/compute »** (une phrase) : si j'avais eu plus de temps et de moyen, j'aurai pris un modèles pre entrainé que j'aurai finetuné pour gagner enormement en performance. Il aurait aussi été possible d'augmenter la taille du dataset en allant chercher d'autres datasets semblables sur internet. Enfin, j'aurai pris le temps de faire mon choix d'hyperparamètres sur plus d'epochs que 3.
 
 ---
@@ -348,7 +365,7 @@ model:
     num_layers: null
     bidirectional: false
   groups: 4
-  num_blocks : 2  
+  num_blocks : 3  
 ```
 - **Commandes exactes** :
 
@@ -402,9 +419,9 @@ python -m src.evaluate --config configs/config.yaml --checkpoint artifacts/best.
 
 - **Artifacts requis présents** :
 
-  - [ ] `runs/` (runs utiles uniquement)
-  - [ ] `artifacts/best.ckpt`
-  - [ ] `configs/config.yaml` aligné avec la meilleure config
+  - [x] `runs/` (runs utiles uniquement)
+  - [x] `artifacts/best.ckpt`
+  - [x] `configs/config.yaml` aligné avec la meilleure config
 
 ---
 

@@ -146,7 +146,7 @@ def main():
     else:
         writer = SummaryWriter(log_dir=os.path.join(runs_dir, "training"))
         weight_decay = config['train']['optimizer']['weight_decay']
-        
+
         print("ENTRAÎNEMENT COMPLET") 
         print(f"LR={learning_rate}, WD={weight_decay}, num_blocks={config['model']['num_blocks']}, groups={config['model']['groups']}")
         print(f"Batch size={batch_size}, Epochs={num_epochs}\n")

@@ -45,7 +45,7 @@ model:
     num_layers: null
     bidirectional: false
   groups: 4
-  num_blocks : 2          
+  num_blocks : 3          
 
 train:
   seed: 42
