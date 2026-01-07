@@ -28,29 +28,50 @@ from torch.amp import autocast, GradScaler
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, required=True)
+    parser.add_argument("--comparison_training", action="store_true")
+    parser.add_argument("--seed", type=int, default=None)
     args = parser.parse_args()
     
     with open(args.config, "r") as f:
         config = yaml.safe_load(f)
 
+    if args.seed is not None:
+        set_seed(args.seed)
+
     device = get_device(prefer="auto")
     criterion = nn.CrossEntropyLoss()
-    runs_dir = config['paths']['runs_dir']
-    num_epochs = 3
 
     # Lire les grilles d'hyperparamètres
-    hparams_config = config["hparams"]
-    hparams_combinations = list(product(
-        hparams_config['lr'],
-        hparams_config['weight_decay'],
-        hparams_config['num_blocks'],
-        hparams_config['groups']
-    ))
+    if args.comparison_training is None:
+        print("Grid Search Mode")
+        num_epochs = 3
+        hparams_config = config["hparams"]
+        hparams_combinations = list(product(
+            hparams_config['lr'],
+            hparams_config['weight_decay'],
+            hparams_config['num_blocks'],
+            hparams_config['groups']
+        ))
+    else:
+        print("Comparison Mode Training")
+        num_epochs = 10
+        hparams_combinations = [
+            (run['lr'], run['weight_decay'], run['num_blocks'], run['groups'], run['comparison'])
+            for run in config["comparison_hparams"]['runs']
+        ]
     
-    print(f"Grid Search : {len(hparams_combinations)} combinaisons à tester")
+    print(f"Nombre de combinaisons à tester : {len(hparams_combinations)}")
 
     # --- BOUCLE PRINCIPALE SUR LES COMBINAISONS ---
-    for idx, (lr, weight_decay, num_blocks, groups) in enumerate(hparams_combinations):
+    for idx, combo in enumerate(hparams_combinations):
+        if args.comparison_training is None:
+            lr, weight_decay, num_blocks, groups = combo
+            runs_dir = config['paths']['runs_dir'] + "/grid_search"
+        else:
+            lr, weight_decay, num_blocks, groups, comparison = combo
+            runs_dir = config['paths']['runs_dir'] + f"/comparison_training/{comparison}"
+
+        run_name = f"proj22_lr={lr}_wd={weight_decay}_blk={num_blocks}_grp={groups}"  
         print(f"\n--- Run {idx+1}/{len(hparams_combinations)} ---")
         print(f"LR={lr}, WD={weight_decay}, Blocks={num_blocks}, Groups={groups}")
         
@@ -68,8 +89,7 @@ def main():
         optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
 
         # Initialiser TensorBoard Writer pour ce run
-        run_name = f"proj22_lr={lr}_wd={weight_decay}_blk={num_blocks}_grp={groups}"
-        writer = SummaryWriter(log_dir=f"{runs_dir}/grid_search/{run_name}")
+        writer = SummaryWriter(log_dir=f"{runs_dir}/{run_name}")
 
         # Initialiser les trackers
         best_val_acc = 0.0

@@ -46,13 +46,16 @@ Nous allons utiliser le dataset de huggingface nommé caltech_birds2011 (url ci-
 |  Test |      5794 |               déséquilibré,    pas de labels manquants , images de tailles variées                                   |
 
 **D2.** Donnez la taille de chaque split et le nombre de classes.  
+
 Il y a 200 classes dans chaque split et le train fait 4795 lignes, le validation 1199, le test 5794 (voir dans le script `src/analysis`).
 
 **D3.** Si vous avez créé un split (ex. validation), expliquez **comment** (stratification, ratio, seed).
+
 Dans mon dataset, j'avais initialement aucun set de validation. J'ai donc créé mon propre split à partir du train en appliquant une stratification par classe avec un ratio de 80% train / 20% val.
 La seed a été fixée à 42 pour permettre la reproductibilité.
 
-**D4.** Donnez la **distribution des classes** (graphique ou tableau) et commentez en 2–3 lignes l’impact potentiel sur l’entraînement.  
+**D4.** Donnez la **distribution des classes** (graphique ou tableau) et commentez en 2–3 lignes l’impact potentiel sur l’entraînement.
+
 La distribution des classes montrent que les ensembles Train et Val sont très équilibrés, il ya autant d'échantillons (24) dans chaque classe. A l'inverse le dataset Test est moins équilibré. La plupart des classes ont 30 échantillons mais certains en ont moins avec 12 échantillons, ou une vingtaine.
 Des graphiques ont été plotés via tensorboard.
 ![distribution_train](./artifacts/data_analysis/distribution_train.png)
@@ -60,6 +63,7 @@ Des graphiques ont été plotés via tensorboard.
 ![distribution_val](./artifacts/data_analysis/distribution_val.png)
 
 **D5.** Mentionnez toute particularité détectée (tailles variées, longueurs variables, multi-labels, etc.).
+
 Ce dataset a très peu de particularités. Il n'a aucun label manquant. Ces images sont toutes en RGB mais sont par contres de tailles très différentes, on compte 5 différentes tailles d'images.
 Toutefois le test set est assez déséquilibré comme dit précédemment.
 
@@ -70,10 +74,13 @@ Listez précisément les opérations et paramètres (valeurs **fixes**) :
 - Vision : resize = [224, 224], center-crop = None, normalize = (mean=[0.48185426, 0.50031734, 0.42832923], std=[0.2270571, 0.2226704, 0.26213554])
 
 **D6.** Quels **prétraitements** avez-vous appliqués (opérations + **paramètres exacts**) et **pourquoi** ?
+
 Comme indiqué en D5 , les images du dataset ont des tailles très variés. Seulement les réseaux de neurones convolutifs ont besoin d'une entrée à taille fixe. Nous redimensionnons donc les images à [224, 224]. Après le resizing, il est important de transformer l'image en tenseur pour pouvoir la traiter avec pytorch. Puis nous normalisons notre tenseur avec mean=[0.48185426, 0.50031734, 0.42832923] et std=[0.2270571, 0.2226704, 0.26213554] car après analyse ce sont les statistiques que nous avons à propos du dataset d'entrainement. Autrement nous aurions pu trouver sur internet les paramètres moyens des datasets d'images connues tels que ImageNet et approximer par ceux-ci.
 NB: Je n'ai pas fait de center-crop car un redimensionnement de l'image avait déjà été fait. On ne voudrait pas qu'une partie de l'oiseau soit accidentellement coupée.
 
-**D7.** Les prétraitements diffèrent-ils entre train/val/test (ils ne devraient pas, sauf recadrage non aléatoire en val/test) ? Tous mes prétraitements sont les mêmes pour train, val et test pour être sur que l'évaluation sera représentative. Toutefois train recevra en plus de stransformations d'augmentation de données.
+**D7.** Les prétraitements diffèrent-ils entre train/val/test (ils ne devraient pas, sauf recadrage non aléatoire en val/test) ? 
+
+Tous mes prétraitements sont les mêmes pour train, val et test pour être sur que l'évaluation sera représentative. Toutefois train recevra en plus de stransformations d'augmentation de données.
 
 ### 1.4 Augmentation de données — _train uniquement_
 
@@ -81,12 +88,14 @@ NB: Je n'ai pas fait de center-crop car un redimensionnement de l'image avait d�
   - Flip horizontal p=0.5
   - Colorjitter très léger (brightness=0.05, contrast=0.05, saturation=0, hue=0)
 
-**D8.** Quelles **augmentations** avez-vous appliquées (paramètres précis) et **pourquoi** ?  
+**D8.** Quelles **augmentations** avez-vous appliquées (paramètres précis) et **pourquoi** ? 
+
 Nous avons appliqué à notre dataset plusieurs augmentations car nous avons un risque de surapprentissage avec très peu d'images par classe (24 environ). Pour que le modèle devienne plus robuste, nous appliquons un randomHorizontalFlip de probabilité 0.5 car un oiseau est le même qu'il soit tourné vers la droite ou la gauche. Nous allons ainsi rendre le modèle invariant à cela.
 Nous allons aussi prendre en compte le fait que les photos ont pu être prises sous différentes conditions d'éclairage. Les paramètres Variations aléatoires de luminosité (±5%), contraste (±5%).
 On rendra ainsi le modèle robuste aux changements d'orientation.
 
 **D9.** Les augmentations **conservent-elles les labels** ? Justifiez pour chaque transformation retenue.
+
 Oui, les transformations conservent les labels, c'est bien le plus important. Le modèle doit comprendre quel est l'oiseau, qu'il ait la tête à droite ou à gauche, qu'il ait été pris plus ou moins au soleil. Il reste de la même espèce.
 
 ### 1.5 Sanity-checks
@@ -98,6 +107,7 @@ Oui, les transformations conservent les labels, c'est bien le plus important. Le
 > ![preprocessed_0](./artifacts/data_analysis/preprocessed_augmented_0.png)
 
 **D10.** Montrez 2–3 exemples et commentez brièvement.  
+
 Les 3 images au-dessus sont de haut en bas:
 
 - l'image originale
@@ -111,6 +121,7 @@ Puis le preprocessing a normalisé les couleurs de l'image d'où le changement m
 D'autres images sont disponibles dans le dossier : `artifacts/data_analysis`
 
 **D11.** Donnez la **forme exacte** d’un batch train (ex. `(batch, C, H, W)` ou `(batch, seq_len)`), et vérifiez la cohérence avec `meta["input_shape"]`.
+
 D'après la sortie de mon script de test dans data_loading, la forme exact de sortie d'un batch est (32, 3, 224, 224). Ce qui est cohérent avec le "batch_size" et "input_shape" inscrit dans les configs (exécuter `python src/data_loading`)
 
 ---
@@ -156,6 +167,7 @@ Remarque : pour que groups=G soit valide, le nombre de canaux de la convolution 
 
 **M1.** Décrivez l’**architecture** complète et donnez le **nombre total de paramètres**.  
 Expliquez le rôle des **2 hyperparamètres spécifiques au modèle** (ceux imposés par votre sujet).
+
 L'architecture est un réseau de neurones convolutif (CNN) divisé en trois étages principaux, où chaque étage est constitué d'une suite de blocs répétant des opérations de convolution, de normalisation (BatchNorm) et d'activation non-linéaire (ReLU). La taille des images diminue progressivement grâce à des couches de MaxPool, jusqu'à une agrégation finale par moyenne (Average Pooling) avant la classification.
 Ce réseau totalise 2 012 488 paramètres entraînables. Concernant les hyperparamètres imposés, l'utilisation de convolutions groupées (G=2) permet de diviser les connexions entre canaux pour réduire le coût de calcul et éviter le surapprentissage, tandis que le nombre de blocs par stage (N=2) joue sur la profondeur du réseau pour permettre l'apprentissage de motifs plus ou moins complexes.
 
@@ -166,6 +178,7 @@ Ce réseau totalise 2 012 488 paramètres entraînables. Concernant les hyperpar
 - **Vérification** : backward OK, gradients ≠ 0
 
 **M2.** Donnez la **loss initiale** observée et dites si elle est cohérente. Indiquez la forme du batch et la forme de sortie du modèle.
+
 La loss initiale est de 5.3239, ce qui est cohérent avec la loss théorique (tirée de la loi uniforme) = 5.2983.
 Le batch d'entrée est de taille (32, 3, 224, 224), ce qui confirme que le modèle traite bien un batch de 32 images RVB de taille 224x224. La sortie du modèle (32, 200) correspond bien à un loggit avec 200 classes
 
@@ -181,6 +194,7 @@ Le batch d'entrée est de taille (32, 3, 224, 224), ce qui confirme que le modè
 >![train/loss](./artifacts/overfit_small/Train_Loss.svg)
 
 **M3.** Donnez la **taille du sous-ensemble**, les **hyperparamètres** du modèle utilisés, et la **courbe train/loss** (capture). Expliquez ce qui prouve l’overfit.
+
 Nous avons pris un sous ensemble de 16 images avec les hyperparamètres Nombre de groupes = 2 et nombre de bloc par stage = 2.
 Avec la courbe de train/loss du dessus, on comprend qu'au bout d'à peine 20 epochs, le modèle ne fait quasi plus d'erreur (loss~=0 soit loss = 0.022108). Le modèle connait "par coeur" le sous ensemble, il fait preuve d'overfit.
 
@@ -198,6 +212,7 @@ Avec la courbe de train/loss du dessus, on comprend qu'au bout d'à peine 20 epo
 > ![lr_finder_loss](./artifacts/lr_finder/loss_lr.svg)
 
 **M4.** Justifiez en 2–3 phrases le choix du **LR** et du **weight decay**.
+
 Le learning rate retenu est celui qui optimise la loss soit pour un weight decay de 1e-4. Ici, c'est 1,4e-4
 J'ai fait le lr_finder avec un weight decay de 1e-5 mais la loss optimale est la même.
 
@@ -252,13 +267,23 @@ Avec cette combinaison, on a la meilleure Validation Accuracy(**0.0350**) et pre
   - Époques = `20` (10–20)
 - **Checkpoint** : `artifacts/best.ckpt` (selon meilleure métrique val)
 
-> _Insérer captures TensorBoard :_
+> ![training](./artifacts/training/training.png)
 >
-> - `train/loss`, `val/loss`
-> - `val/accuracy` **ou** `val/f1` (classification)
+> - `train/accuracy`, `train/loss`
+> - `val/accuracy`, `val/loss` 
 
 **M6.** Montrez les **courbes train/val** (loss + métrique). Interprétez : sous-apprentissage / sur-apprentissage / stabilité d’entraînement.
-Les performances du modèles étant très faibles j'ai tenté de voir si cela venait de ma pipeline ou du modèle "trop simpliste". J'ai donc fait tourner mon code avec comme modèle resnet avec les mêmes hyperparamètres et j'obtiens presque 19% d'accuracy. En réalité notre modèle est en sous apprentissage, il faudrait le lancer sur plus d'epochs et complexifier son architecture qui semble un peu simpliste.
+
+Ici, notre meilleure accuracy a été de **8,84%** à la **17eme epoch**, epoch à partir de laquelle l'accuracy ainsi que la loss ont stagné (**4,2713** au minimum à l'epoch 19).
+
+Il n'y a pas de surapprentissage, l'écart entre le train et le val reste modéré. Cependant, le modèle souffre justement de sous apprentissage. Au bout d'à peine 15 epochs il atteint un plateau. Il manque donc cruellement de capacité.
+Malgré cela, il est relativement stable. La convergence des metriques est progressives et sans trop d'oscillations
+
+**Remarques** :
+Bien que très petites, ce sont les performances que l'ont pourrait attendre d'un simple CNN entrainé from scratch sans pré-entrainement, sur un petit dataset.
+En réalité, notre résultat illustre parfaitement l'importance du transfer learning et de la pronfondeur de réseau pour la classification dite `fine-grained`.
+Les approches pré-deep learning sur CUB-200-2011, utilisant des descripteurs SIFT couplés à des SVM, atteignaient **17.3%** d'accuracy. Notre CNN custom (**8.84%**) se situe en-dessous de ce benchmark classique mais reste cohérent pour un réseau léger entraîné from scratch avec seulement 20 epochs. Les architectures modernes utilisant le transfer learning dépassent **75%** grâce au pré-entraînement sur ImageNet.
+
 ---
 
 ## 7) Comparaisons de courbes (analyse)
@@ -271,6 +296,7 @@ Les performances du modèles étant très faibles j'ai tenté de voir si cela ve
 
 **M7.** Trois **comparaisons** commentées (une phrase chacune) : LR, weight decay, hyperparamètres modèle — ce que vous attendiez vs. ce que vous observez.
 
+Pour cela, nous allons 
 ---
 
 ## 8) Itération supplémentaire (si temps)
@@ -295,21 +321,82 @@ Les performances du modèles étant très faibles j'ai tenté de voir si cela ve
 
 ## 10) Limites, erreurs & bug diary (court)
 
-- **Limites connues** (données, compute, modèle) :
-- **Erreurs rencontrées** (shape mismatch, divergence, NaN…) et **solutions** :
-- **Idées « si plus de temps/compute »** (une phrase) :
+- **Limites connues** (données, compute, modèle) : modèle très simpliste, non préentrainé, dataset petit surtout la taille du dataset d'entrainement (environ 5000 images ce qui est très peu comparé aux datasets classiques d'images tels que ImageNet qui compte plus de 1M d'images)
+- **Erreurs rencontrées** (shape mismatch, divergence, NaN…) et **solutions** : shape mismatch lors des tentatives de preprocessing ou d'augmentations
+- **Idées « si plus de temps/compute »** (une phrase) : si j'avais eu plus de temps et de moyen, j'aurai pris un modèles pre entrainé que j'aurai finetuné pour gagner enormement en performance. Il aurait aussi été possible d'augmenter la taille du dataset en allant chercher d'autres datasets semblables sur internet. Enfin, j'aurai pris le temps de faire mon choix d'hyperparamètres sur plus d'epochs que 3.
 
 ---
 
 ## 11) Reproductibilité
 
-- **Seed** : `_____`
+- **Seed** : `42`
 - **Config utilisée** : joindre un extrait de `configs/config.yaml` (sections pertinentes)
+```yml
+model:
+  type: cnn               # ex: "resnet18", "mlp", "lstm", ...
+  num_classes: 200
+  input_shape: [3, 224, 224] # ex: [3, 32, 32] ou null
+  hidden_sizes: [64, 128, 256]            # ex: [256, 128] ou null
+  activation: relu          # ex: relu, gelu, tanh...
+  dropout: 0.0              # ex: 0.0–0.5
+  batch_norm: true         # true/false
+  residual: false           # true/false
+  attention: false          # true/false
+  rnn:                      # pour RNN/LSTM/GRU : paramètres ou null
+    type: null              # lstm/gru
+    hidden_size: null
+    num_layers: null
+    bidirectional: false
+  groups: 4
+  num_blocks : 2  
+```
 - **Commandes exactes** :
 
+**Analyse `D2, D5, D6, D9, D10, M0`**
+
 ```bash
-# Exemple (remplacer par vos commandes effectives)
-python -m src.train --config configs/config.yaml --max_epochs 15
+python -m src.analysis.py
+```
+
+**Check Batch shape `D11`**
+
+```bash
+python -m src.data_loading.py
+```
+
+**First Batch and Training `M2, M6`**
+
+```bash
+python -m src.train --config configs/config.yaml --seed 42
+```
+
+**Overfit small `M3`**
+
+```bash
+python -m src.train --config configs/config.yaml --seed 42 --overfit_small
+```
+
+**LR  Finder `M4`**
+
+```bash
+python -m src.lr_finder --config configs/config.yaml
+```
+
+**Grid search `M5`**
+
+```bash
+python -m src.grid_search --config configs/config.yaml --seed 42
+```
+
+**Comparaison des runs `M7`**
+
+```bash
+python -m src.grid_search --config configs/config.yaml --seed 42 --comparison_training
+```
+
+**Evaluation du modele `M9`**
+
+```bash
 python -m src.evaluate --config configs/config.yaml --checkpoint artifacts/best.ckpt
 ````
 
@@ -324,5 +411,14 @@ python -m src.evaluate --config configs/config.yaml --checkpoint artifacts/best.
 ## 12) Références (courtes)
 
 - PyTorch docs des modules utilisés (Conv2d, BatchNorm, ReLU, LSTM/GRU, transforms, etc.).
+  - torch.nn : Conv2d, BatchNorm2d, ReLU, MaxPool2d, AdaptiveAvgPool2d, Linear, CrossEntropyLoss
+  - torch.optim : Adam
+  - torch.amp : GradScaler, autocast
+  - torch.utils.data : DataLoader, Dataset
 - Lien dataset officiel (et/ou HuggingFace/torchvision/torchaudio).
+  - <https://huggingface.co/datasets/dpdl-benchmark/caltech_birds2011>
+  - torchvision.transforms : ToTensor, Normalize, RandomHorizontalFlip, ColorJitter
 - Toute ressource externe substantielle (une ligne par référence).
+  - [Tensorboard](https://www.tensorflow.org/tensorboard)
+  - [Tensorboard HParam Issue](https://github.com/tensorflow/tensorboard/issues/6907)
+  - ["The Caltech-UCSD Birds-200-2011 Dataset". Technical Report CNS-TR-2011-001, California Institute of Technology](https://gwern.net/doc/ai/dataset/2011-wah.pdf)

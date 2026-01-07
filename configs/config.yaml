@@ -78,6 +78,35 @@ hparams:                    # espace pour mini grid search
   num_blocks : [2, 3]
   groups: [2, 4]
 
+comparison_hparams:         # comparaisons ciblées pour M7 (15 epochs)
+  # Liste explicite de 7 runs pour comparer un seul hyperparamètre à la fois
+  runs:
+    - lr: 0.0005
+      weight_decay: 0.0
+      num_blocks: 2
+      groups: 4
+      comparison: "baseline"
+    - lr: 0.001
+      weight_decay: 0.0
+      num_blocks: 2
+      groups: 4
+      comparison: "lr"
+    - lr: 0.0005
+      weight_decay: 0.0001
+      num_blocks: 2
+      groups: 4
+      comparison: "wd"
+    - lr: 0.0005
+      weight_decay: 0.0
+      num_blocks: 2
+      groups: 2
+      comparison: "model"
+    - lr: 0.0005
+      weight_decay: 0.0
+      num_blocks: 3
+      groups: 4
+      comparison: "model"
+
 paths:
   runs_dir: "./runs"
   artifacts_dir: "./artifacts"
