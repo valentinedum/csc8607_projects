@@ -22,3 +22,7 @@ pip install -r requirements.txt
 * Utilisez le `Makefile` pour lancer les étapes (ou exécutez les modules Python directement).
 
 > Reportez-vous au site du cours pour les règles, livrables et barème.
+
+## Données
+
+Les données n'ont pas pu être déposées (car trop lourdes) mais sont disponibles sur hugging face. Le lien est dans le rapport `report_template.md`
